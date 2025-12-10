@@ -1,0 +1,132 @@
+// Core domain types for GetAnswers Mission Control
+
+export type RiskLevel = 'high' | 'medium' | 'low';
+export type ObjectiveStatus = 'waiting_on_you' | 'waiting_on_others' | 'handled' | 'scheduled' | 'muted';
+export type TimelineItemType = 'incoming' | 'outgoing' | 'agent_action';
+export type TimelineBadge = 'auto' | 'sent' | 'pending' | 'new';
+export type CategoryType = 'finance' | 'client' | 'hr' | 'legal' | 'internal' | 'partner';
+
+export interface Sender {
+  id: string;
+  name: string;
+  email: string;
+  organization?: string;
+  avatarUrl?: string;
+  avatarColor?: string;
+  tags: SenderTag[];
+}
+
+export interface SenderTag {
+  label: string;
+  type: 'vip' | 'key' | 'new' | 'blocked' | 'custom';
+}
+
+export interface RelatedItem {
+  id: string;
+  label: string;
+  href: string;
+  type: 'invoice' | 'contract' | 'project' | 'document' | 'ticket';
+}
+
+export interface ActionCard {
+  id: string;
+  objectiveId: string;
+  priorityScore: number;
+  riskLevel: RiskLevel;
+  category: CategoryType;
+  confidenceScore: number;
+  summary: string;
+  proposedAction: string;
+  isUncertain?: boolean;
+  sender: Sender;
+  relatedItems: RelatedItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimelineItem {
+  id: string;
+  type: TimelineItemType;
+  sender: string;
+  senderAvatar?: string;
+  timestamp: string;
+  content: string;
+  fullContent?: string;
+  badge?: TimelineBadge;
+  isCollapsed?: boolean;
+}
+
+export interface ConversationThread {
+  id: string;
+  objectiveId: string;
+  objectiveTitle: string;
+  objectiveStatus: ObjectiveStatus;
+  agentSummary: string;
+  timeline: TimelineItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Objective {
+  id: string;
+  title: string;
+  status: ObjectiveStatus;
+  description?: string;
+  conversationIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NavigationCount {
+  needsDecision: number;
+  waitingOnOthers: number;
+  handledByAI: number;
+  scheduledDone: number;
+  muted: number;
+}
+
+export interface EfficiencyStats {
+  handledAutonomously: number;
+  totalToday: number;
+  percentage: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  autonomyLevel: 'low' | 'medium' | 'high';
+  createdAt: string;
+}
+
+export interface GlobalStatus {
+  status: 'all_clear' | 'pending_decisions' | 'urgent';
+  message: string;
+  pendingCount: number;
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+// Action types for mutations
+export type ActionType = 'approve' | 'edit' | 'override' | 'escalate';
+
+export interface ActionPayload {
+  cardId: string;
+  action: ActionType;
+  editedContent?: string;
+  reason?: string;
+}
