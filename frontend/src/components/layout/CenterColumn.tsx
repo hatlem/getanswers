@@ -1,14 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ActionCard } from '../cards/ActionCard';
-import type { ActionCard as ActionCardType, ActionType } from '../../types';
+import { ActionCardSkeleton } from '../ui/Skeleton';
+import { ErrorState } from '../ui/ErrorState';
+import { EmptyQueueState, NoFilterResultsState } from '../ui/EmptyState';
+import { useQueue } from '../../hooks/useQueue';
+import type { ActionCard as ActionCardType, ActionType, ObjectiveStatus } from '../../types';
 
 interface CenterColumnProps {
-  cards: ActionCardType[];
   selectedCardId?: string;
   onSelectCard: (card: ActionCardType) => void;
   onAction: (cardId: string, action: ActionType) => void;
   activeFilter: 'all' | 'high_risk' | 'low_confidence';
   onFilterChange: (filter: 'all' | 'high_risk' | 'low_confidence') => void;
+  activeView: ObjectiveStatus | 'needs_decision';
 }
 
 const filterButtons = [
@@ -18,13 +22,25 @@ const filterButtons = [
 ];
 
 export function CenterColumn({
-  cards,
   selectedCardId,
   onSelectCard,
   onAction,
   activeFilter,
   onFilterChange,
+  activeView,
 }: CenterColumnProps) {
+  // Fetch queue data
+  const {
+    data: cards = [],
+    isLoading,
+    error,
+    refetch
+  } = useQueue({
+    filter: activeFilter,
+    status: activeView === 'needs_decision' ? 'needs_decision' : activeView,
+  });
+
+  // Filter cards based on active filter
   const filteredCards = cards.filter((card) => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'high_risk') return card.riskLevel === 'high';
@@ -70,48 +86,41 @@ export function CenterColumn({
       {/* Cards List */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4 max-w-3xl mx-auto">
-          <AnimatePresence mode="popLayout">
-            {filteredCards.length > 0 ? (
-              filteredCards.map((card, index) => (
-                <ActionCard
-                  key={card.id}
-                  card={card}
-                  index={index}
-                  isSelected={selectedCardId === card.id}
-                  onSelect={onSelectCard}
-                  onAction={onAction}
-                />
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-16 text-center"
-              >
-                <div className="w-16 h-16 rounded-full bg-success-muted flex items-center justify-center mb-4">
-                  <svg
-                    className="w-8 h-8 text-success"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-text-primary mb-1">
-                  All Clear
-                </h3>
-                <p className="text-sm text-text-secondary max-w-xs">
-                  No items match the current filter. Your AI agent is handling everything autonomously.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Loading State */}
+          {isLoading && (
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <ActionCardSkeleton key={i} index={i} />
+              ))}
+            </>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <ErrorState error={error} onRetry={() => refetch()} />
+          )}
+
+          {/* Cards or Empty State */}
+          {!isLoading && !error && (
+            <AnimatePresence mode="popLayout">
+              {filteredCards.length > 0 ? (
+                filteredCards.map((card, index) => (
+                  <ActionCard
+                    key={card.id}
+                    card={card}
+                    index={index}
+                    isSelected={selectedCardId === card.id}
+                    onSelect={onSelectCard}
+                    onAction={onAction}
+                  />
+                ))
+              ) : activeFilter !== 'all' ? (
+                <NoFilterResultsState onClear={() => onFilterChange('all')} />
+              ) : (
+                <EmptyQueueState />
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </div>
     </section>

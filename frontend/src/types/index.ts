@@ -130,3 +130,28 @@ export interface ActionPayload {
   editedContent?: string;
   reason?: string;
 }
+
+// Additional Auth types
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export interface MagicLinkRequest {
+  email: string;
+}
+
+export interface MagicLinkVerification {
+  token: string;
+}
+
+export interface GmailCallbackParams {
+  code: string;
+  state: string;
+}

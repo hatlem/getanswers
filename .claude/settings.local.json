@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source .venv/bin/activate)",
+      "Bash(python:*)",
+      "Bash(railway help:*)",
+      "Bash(railway add --help:*)",
+      "Bash(railway add:*)",
+      "Bash(railway service status:*)",
+      "Bash(railway variables --help:*)",
+      "Bash(railway variables:*)",
+      "Bash(railway up:*)",
+      "Bash(railway logs:*)"
+    ]
+  }
+}

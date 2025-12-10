@@ -1,11 +1,14 @@
 import { motion } from 'framer-motion';
 import { Box, RefreshCcw, Settings } from 'lucide-react';
 import { TimelineItem } from '../timeline/TimelineItem';
+import { ConversationHeaderSkeleton, AgentSummarySkeleton, TimelineSkeleton } from '../ui/Skeleton';
+import { InlineError } from '../ui/ErrorState';
+import { NoConversationState } from '../ui/EmptyState';
+import { useConversationByObjective } from '../../hooks/useConversations';
 import { cn } from '../../lib/utils';
-import type { ConversationThread } from '../../types';
 
 interface RightColumnProps {
-  conversation: ConversationThread | null;
+  objectiveId: string | null;
   onTakeOver?: () => void;
   onChangePolicy?: () => void;
 }
@@ -38,25 +41,47 @@ const statusStyles = {
   },
 };
 
-export function RightColumn({ conversation, onTakeOver, onChangePolicy }: RightColumnProps) {
-  if (!conversation) {
+export function RightColumn({ objectiveId, onTakeOver, onChangePolicy }: RightColumnProps) {
+  // Fetch conversation by objective ID
+  const {
+    data: conversation,
+    isLoading,
+    error,
+    refetch,
+  } = useConversationByObjective(objectiveId);
+
+  // No objective selected
+  if (!objectiveId) {
     return (
       <aside className="w-96 bg-surface-elevated border-l border-surface-border flex flex-col items-center justify-center p-8 shrink-0">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-16 h-16 rounded-full bg-surface-card border border-surface-border flex items-center justify-center mx-auto mb-4">
-            <Box className="w-7 h-7 text-text-muted" />
-          </div>
-          <h3 className="text-sm font-medium text-text-primary mb-1">
-            No Conversation Selected
+        <NoConversationState />
+      </aside>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <aside className="w-96 bg-surface-elevated border-l border-surface-border flex flex-col shrink-0">
+        <ConversationHeaderSkeleton />
+        <AgentSummarySkeleton />
+        <div className="flex-1 overflow-y-auto p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-4">
+            Conversation Timeline
           </h3>
-          <p className="text-xs text-text-muted max-w-[200px]">
-            Select an action card to view the conversation timeline and context.
-          </p>
-        </motion.div>
+          <TimelineSkeleton count={4} />
+        </div>
+      </aside>
+    );
+  }
+
+  // Error state
+  if (error || !conversation) {
+    return (
+      <aside className="w-96 bg-surface-elevated border-l border-surface-border flex flex-col shrink-0">
+        <div className="p-5">
+          <InlineError error={error} onRetry={() => refetch()} />
+        </div>
       </aside>
     );
   }

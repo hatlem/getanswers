@@ -9,11 +9,12 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { NavItemSkeleton, StatsSkeleton } from '../ui/Skeleton';
 import type { NavigationCount, EfficiencyStats, ObjectiveStatus } from '../../types';
 
 interface LeftColumnProps {
-  counts: NavigationCount;
-  stats: EfficiencyStats;
+  counts?: NavigationCount;
+  stats?: EfficiencyStats;
   activeView: ObjectiveStatus | 'needs_decision';
   onViewChange: (view: ObjectiveStatus | 'needs_decision') => void;
 }
@@ -72,14 +73,14 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
       id: 'needs_decision',
       label: 'Needs My Decision',
       icon: <AlertTriangle className="w-[18px] h-[18px]" />,
-      count: counts.needsDecision,
+      count: counts?.needsDecision,
       variant: 'critical',
     },
     {
       id: 'waiting_on_others',
       label: 'Waiting on Others',
       icon: <Clock className="w-[18px] h-[18px]" />,
-      count: counts.waitingOnOthers,
+      count: counts?.waitingOnOthers,
       variant: 'waiting',
     },
   ];
@@ -89,21 +90,21 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
       id: 'handled',
       label: 'Handled by AI',
       icon: <CheckCircle2 className="w-[18px] h-[18px]" />,
-      count: counts.handledByAI,
+      count: counts?.handledByAI,
       variant: 'success',
     },
     {
       id: 'scheduled',
       label: 'Scheduled & Done',
       icon: <Calendar className="w-[18px] h-[18px]" />,
-      count: counts.scheduledDone,
+      count: counts?.scheduledDone,
       variant: 'scheduled',
     },
     {
       id: 'muted',
       label: 'Muted / Ignored',
       icon: <VolumeX className="w-[18px] h-[18px]" />,
-      count: counts.muted,
+      count: counts?.muted,
       variant: 'muted',
     },
   ];
@@ -210,25 +211,29 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-        <div className="p-4 rounded-xl bg-surface-card border border-surface-border">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
-              Today's Efficiency
-            </span>
+        {!stats ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="p-4 rounded-xl bg-surface-card border border-surface-border">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">
+                Today's Efficiency
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-3xl font-bold text-success font-mono">{stats.percentage}%</span>
+            </div>
+            <p className="text-xs text-text-secondary mb-3">Handled autonomously</p>
+            <div className="h-2 rounded-full bg-surface-border overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-success to-accent-cyan"
+                initial={{ width: 0 }}
+                animate={{ width: `${stats.percentage}%` }}
+                transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
+              />
+            </div>
           </div>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-3xl font-bold text-success font-mono">{stats.percentage}%</span>
-          </div>
-          <p className="text-xs text-text-secondary mb-3">Handled autonomously</p>
-          <div className="h-2 rounded-full bg-surface-border overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-success to-accent-cyan"
-              initial={{ width: 0 }}
-              animate={{ width: `${stats.percentage}%` }}
-              transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
-            />
-          </div>
-        </div>
+        )}
       </motion.div>
     </aside>
   );

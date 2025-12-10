@@ -1,175 +1,93 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type {
-  ActionCard,
-  ConversationThread,
-  NavigationCount,
-  EfficiencyStats,
-  GlobalStatus,
   User,
   ObjectiveStatus,
-  ActionType,
 } from '../types';
-import {
-  mockUser,
-  mockGlobalStatus,
-  mockNavigationCounts,
-  mockEfficiencyStats,
-  mockActionCards,
-  mockConversation,
-} from '../lib/mockData';
+
+// Updated store to work alongside React Query
+// React Query now handles server state (queue, stats, conversations)
+// Zustand handles UI state and auth state
 
 interface AppState {
-  // User
-  user: User;
+  // Auth state (synced with React Query)
+  user: User | null;
+  isAuthenticated: boolean;
 
-  // Global status
-  globalStatus: GlobalStatus;
-
-  // Navigation
+  // UI state
   activeView: ObjectiveStatus | 'needs_decision';
-  navigationCounts: NavigationCount;
-  efficiencyStats: EfficiencyStats;
-
-  // Review Queue
-  actionCards: ActionCard[];
   selectedCardId: string | null;
+  selectedObjectiveId: string | null;
   activeFilter: 'all' | 'high_risk' | 'low_confidence';
 
-  // Conversation
-  selectedConversation: ConversationThread | null;
-
   // Actions
+  setUser: (user: User | null) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
   setActiveView: (view: ObjectiveStatus | 'needs_decision') => void;
   setActiveFilter: (filter: 'all' | 'high_risk' | 'low_confidence') => void;
-  selectCard: (card: ActionCard) => void;
+  setSelectedCard: (cardId: string | null, objectiveId?: string | null) => void;
   clearSelection: () => void;
-  handleCardAction: (cardId: string, action: ActionType) => void;
-  updateCardConfidence: (cardId: string, confidence: number) => void;
-  removeCard: (cardId: string) => void;
+  logout: () => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  // Initial state from mock data
-  user: mockUser,
-  globalStatus: mockGlobalStatus,
-  activeView: 'needs_decision',
-  navigationCounts: mockNavigationCounts,
-  efficiencyStats: mockEfficiencyStats,
-  actionCards: mockActionCards,
-  selectedCardId: mockActionCards[0]?.id || null,
-  activeFilter: 'all',
-  selectedConversation: mockConversation,
-
-  // Actions
-  setActiveView: (view) => {
-    set({ activeView: view });
-  },
-
-  setActiveFilter: (filter) => {
-    set({ activeFilter: filter });
-  },
-
-  selectCard: (card) => {
-    // In a real app, this would fetch the conversation for this card
-    set({
-      selectedCardId: card.id,
-      selectedConversation: mockConversation, // Would be fetched based on card.objectiveId
-    });
-  },
-
-  clearSelection: () => {
-    set({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      // Initial state
+      user: null,
+      isAuthenticated: false,
+      activeView: 'needs_decision',
       selectedCardId: null,
-      selectedConversation: null,
-    });
-  },
+      selectedObjectiveId: null,
+      activeFilter: 'all',
 
-  handleCardAction: (cardId, action) => {
-    const state = get();
+      // Actions
+      setUser: (user) => {
+        set({ user, isAuthenticated: !!user });
+      },
 
-    switch (action) {
-      case 'approve':
-        // Remove the card from the queue (action was approved)
+      setAuthenticated: (isAuthenticated) => {
+        set({ isAuthenticated });
+      },
+
+      setActiveView: (view) => {
+        set({ activeView: view });
+      },
+
+      setActiveFilter: (filter) => {
+        set({ activeFilter: filter });
+      },
+
+      setSelectedCard: (cardId, objectiveId = null) => {
         set({
-          actionCards: state.actionCards.filter((c) => c.id !== cardId),
-          navigationCounts: {
-            ...state.navigationCounts,
-            needsDecision: Math.max(0, state.navigationCounts.needsDecision - 1),
-            handledByAI: state.navigationCounts.handledByAI + 1,
-          },
-          globalStatus: {
-            ...state.globalStatus,
-            pendingCount: Math.max(0, state.globalStatus.pendingCount - 1),
-            message:
-              state.globalStatus.pendingCount - 1 <= 0
-                ? 'All Systems Go.'
-                : `${state.globalStatus.pendingCount - 1} Decision${state.globalStatus.pendingCount - 1 !== 1 ? 's' : ''} Pending`,
-            status: state.globalStatus.pendingCount - 1 <= 0 ? 'all_clear' : 'pending_decisions',
-          },
+          selectedCardId: cardId,
+          selectedObjectiveId: objectiveId,
         });
+      },
 
-        // Clear selection if this card was selected
-        if (state.selectedCardId === cardId) {
-          const remainingCards = state.actionCards.filter((c) => c.id !== cardId);
-          set({
-            selectedCardId: remainingCards[0]?.id || null,
-            selectedConversation: remainingCards.length > 0 ? mockConversation : null,
-          });
-        }
-        break;
-
-      case 'override':
-        // Similar to approve but logs as rejected
+      clearSelection: () => {
         set({
-          actionCards: state.actionCards.filter((c) => c.id !== cardId),
-          navigationCounts: {
-            ...state.navigationCounts,
-            needsDecision: Math.max(0, state.navigationCounts.needsDecision - 1),
-          },
-          globalStatus: {
-            ...state.globalStatus,
-            pendingCount: Math.max(0, state.globalStatus.pendingCount - 1),
-            message:
-              state.globalStatus.pendingCount - 1 <= 0
-                ? 'All Systems Go.'
-                : `${state.globalStatus.pendingCount - 1} Decision${state.globalStatus.pendingCount - 1 !== 1 ? 's' : ''} Pending`,
-            status: state.globalStatus.pendingCount - 1 <= 0 ? 'all_clear' : 'pending_decisions',
-          },
+          selectedCardId: null,
+          selectedObjectiveId: null,
         });
+      },
 
-        if (state.selectedCardId === cardId) {
-          const remainingCards = state.actionCards.filter((c) => c.id !== cardId);
-          set({
-            selectedCardId: remainingCards[0]?.id || null,
-            selectedConversation: remainingCards.length > 0 ? mockConversation : null,
-          });
-        }
-        break;
-
-      case 'edit':
-        // Would open an edit modal in real implementation
-        console.log('Edit action for card:', cardId);
-        break;
-
-      case 'escalate':
-        // Would expand the right column or open detail view
-        console.log('Escalate action for card:', cardId);
-        break;
+      logout: () => {
+        set({
+          user: null,
+          isAuthenticated: false,
+          selectedCardId: null,
+          selectedObjectiveId: null,
+        });
+      },
+    }),
+    {
+      name: 'getanswers-app-store',
+      // Only persist UI preferences, not auth state
+      partialize: (state) => ({
+        activeView: state.activeView,
+        activeFilter: state.activeFilter,
+      }),
     }
-  },
-
-  updateCardConfidence: (cardId, confidence) => {
-    set({
-      actionCards: get().actionCards.map((card) =>
-        card.id === cardId ? { ...card, confidenceScore: confidence } : card
-      ),
-    });
-  },
-
-  removeCard: (cardId) => {
-    const state = get();
-    set({
-      actionCards: state.actionCards.filter((c) => c.id !== cardId),
-    });
-  },
-}));
+  )
+);
