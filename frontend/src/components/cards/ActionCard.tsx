@@ -8,7 +8,7 @@ interface ActionCardProps {
   card: ActionCardType;
   isSelected?: boolean;
   onSelect?: (card: ActionCardType) => void;
-  onAction?: (cardId: string, action: ActionType) => void;
+  onAction?: (cardId: string, action: ActionType, card: ActionCardType) => void;
   index?: number;
 }
 
@@ -38,7 +38,7 @@ const tagTypeStyles: Record<string, string> = {
 export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: ActionCardProps) {
   const handleAction = (e: React.MouseEvent, action: ActionType) => {
     e.stopPropagation();
-    onAction?.(card.id, action);
+    onAction?.(card.id, action, card);
   };
 
   return (

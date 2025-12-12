@@ -70,7 +70,7 @@ export function ErrorState({
       )}
 
       {/* Technical Details (collapsed by default) */}
-      {error && process.env.NODE_ENV === 'development' && (
+      {error && import.meta.env.DEV && (
         <details className="mt-6 max-w-lg w-full">
           <summary className="cursor-pointer text-xs text-text-muted hover:text-text-secondary transition-colors">
             Technical Details

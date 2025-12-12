@@ -4,11 +4,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, type QueueParams } from '../lib/api';
 import { queryKeys } from '../lib/queryClient';
-import type { ActionCard } from '../types';
+import type { ActionCard, QueueResponse } from '../types';
 
 // Hook to fetch queue items
 export function useQueue(params?: QueueParams) {
-  return useQuery({
+  return useQuery<QueueResponse>({
     queryKey: queryKeys.queue.list(params),
     queryFn: () => api.queue.getQueue(params),
     // Refetch every 30 seconds for real-time updates
@@ -36,11 +36,15 @@ export function useApprove() {
       });
 
       // Optimistically remove the item from all queue lists
-      queryClient.setQueriesData<ActionCard[]>(
+      queryClient.setQueriesData<QueueResponse>(
         { queryKey: queryKeys.queue.all },
         (old) => {
           if (!old) return old;
-          return old.filter((card) => card.id !== id);
+          return {
+            ...old,
+            cards: old.cards.filter((card) => card.id !== id),
+            total: old.total - 1,
+          };
         }
       );
 
@@ -82,11 +86,15 @@ export function useOverride() {
       });
 
       // Optimistically remove the item from all queue lists
-      queryClient.setQueriesData<ActionCard[]>(
+      queryClient.setQueriesData<QueueResponse>(
         { queryKey: queryKeys.queue.all },
         (old) => {
           if (!old) return old;
-          return old.filter((card) => card.id !== id);
+          return {
+            ...old,
+            cards: old.cards.filter((card) => card.id !== id),
+            total: old.total - 1,
+          };
         }
       );
 
@@ -125,15 +133,18 @@ export function useEdit() {
       });
 
       // Optimistically update the item in all queue lists
-      queryClient.setQueriesData<ActionCard[]>(
+      queryClient.setQueriesData<QueueResponse>(
         { queryKey: queryKeys.queue.all },
         (old) => {
           if (!old) return old;
-          return old.map((card) =>
-            card.id === id
-              ? { ...card, proposedAction: content, updatedAt: new Date().toISOString() }
-              : card
-          );
+          return {
+            ...old,
+            cards: old.cards.map((card) =>
+              card.id === id
+                ? { ...card, proposedAction: content, updatedAt: new Date().toISOString() }
+                : card
+            ),
+          };
         }
       );
 
@@ -164,11 +175,14 @@ export function useEscalate() {
       api.queue.escalate(id, reason),
     onSuccess: (data) => {
       // Update the cache with the escalated item
-      queryClient.setQueriesData<ActionCard[]>(
+      queryClient.setQueriesData<QueueResponse>(
         { queryKey: queryKeys.queue.all },
         (old) => {
           if (!old) return old;
-          return old.map((card) => (card.id === data.id ? data : card));
+          return {
+            ...old,
+            cards: old.cards.map((card) => (card.id === data.id ? data : card)),
+          };
         }
       );
     },

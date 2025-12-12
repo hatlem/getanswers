@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TopNav } from './components/layout/TopNav';
@@ -9,6 +10,8 @@ import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
 import { GmailCallbackPage } from './components/auth/GmailCallbackPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { EditModal } from './components/modals/EditModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
 import { useAuth } from './hooks/useAuth';
@@ -29,15 +32,19 @@ function Dashboard() {
     setSelectedCard,
   } = useAppStore();
 
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [cardToEdit, setCardToEdit] = useState<ActionCard | null>(null);
+
   // Fetch user data
   const { user } = useAuth();
 
   // Fetch data using React Query hooks
   const { data: stats, isLoading: statsLoading } = useStats();
-  const { approve, override, edit, escalate } = useQueueActions();
+  const { approve, override, edit, escalate, isEditing } = useQueueActions();
 
   // Handler for card actions with toast notifications
-  const handleCardAction = (cardId: string, action: ActionType) => {
+  const handleCardAction = (cardId: string, action: ActionType, card?: ActionCard) => {
     switch (action) {
       case 'approve':
         approve(
@@ -59,8 +66,10 @@ function Dashboard() {
         );
         break;
       case 'edit':
-        // In real implementation, would show modal to get edited content
-        console.log('Edit action for card:', cardId);
+        if (card) {
+          setCardToEdit(card);
+          setEditModalOpen(true);
+        }
         break;
       case 'escalate':
         // In real implementation, would show modal to get reason
@@ -78,6 +87,23 @@ function Dashboard() {
   // Handler for card selection
   const handleSelectCard = (card: ActionCard) => {
     setSelectedCard(card.id, card.objectiveId);
+  };
+
+  // Handler for edit modal save
+  const handleEditSave = (cardId: string, content: string) => {
+    edit(
+      { id: cardId, content },
+      {
+        onSuccess: () => {
+          actionToast.approve(); // Using approve toast for now
+          setEditModalOpen(false);
+          setCardToEdit(null);
+        },
+        onError: (error) => {
+          actionToast.approveError(error.message);
+        },
+      }
+    );
   };
 
   // Show loading state for initial stats load only
@@ -98,7 +124,9 @@ function Dashboard() {
       <TopNav
         user={user || null}
         globalStatus={stats?.globalStatus || null}
-        onSearch={(query) => console.log('Search:', query)}
+        onSearch={(_query) => {
+          // TODO: Implement search functionality
+        }}
       />
 
       <main className="flex-1 flex min-h-0">
@@ -120,10 +148,26 @@ function Dashboard() {
 
         <RightColumn
           objectiveId={selectedObjectiveId}
-          onTakeOver={() => console.log('Take over thread')}
-          onChangePolicy={() => console.log('Change policy')}
+          onTakeOver={() => {
+            // TODO: Implement take over functionality
+          }}
+          onChangePolicy={() => {
+            // TODO: Implement change policy functionality
+          }}
         />
       </main>
+
+      {/* Edit Modal */}
+      <EditModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setCardToEdit(null);
+        }}
+        card={cardToEdit}
+        onSave={handleEditSave}
+        isSaving={isEditing}
+      />
     </div>
   );
 }
@@ -158,9 +202,11 @@ function AppContent() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppContent />
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

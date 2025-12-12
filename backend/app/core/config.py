@@ -1,5 +1,6 @@
 """Application configuration using Pydantic settings."""
 
+import secrets
 from typing import Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,8 +23,8 @@ class Settings(BaseSettings):
 
     # JWT Configuration
     SECRET_KEY: str = Field(
-        default="dev-secret-key-change-in-production-use-a-long-random-string",
-        description="Secret key for JWT token generation"
+        default_factory=lambda: secrets.token_hex(32),
+        description="Secret key for JWT token generation - MUST be set via environment variable in production"
     )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 1 week
@@ -112,6 +113,30 @@ class Settings(BaseSettings):
             v = v.replace("postgresql://", "postgresql+asyncpg://")
         elif "postgres://" in v:
             v = v.replace("postgres://", "postgresql+asyncpg://")
+        return v
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str, info) -> str:
+        """Validate SECRET_KEY is properly configured."""
+        import os
+        import sys
+
+        # Check if SECRET_KEY was explicitly set via environment variable
+        if "SECRET_KEY" not in os.environ:
+            # If in production, this is a critical security issue
+            if info.data.get("ENVIRONMENT", "").lower() == "production":
+                print("ERROR: SECRET_KEY must be explicitly set in production environment!", file=sys.stderr)
+                sys.exit(1)
+            else:
+                # In development, warn but allow auto-generated key
+                print("WARNING: Using auto-generated SECRET_KEY. Set SECRET_KEY environment variable for consistent sessions.", file=sys.stderr)
+
+        # Validate minimum length
+        if len(v) < 32:
+            print("ERROR: SECRET_KEY must be at least 32 characters long", file=sys.stderr)
+            sys.exit(1)
+
         return v
 
     @property

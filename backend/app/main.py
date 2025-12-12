@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.database import close_db
 from app.core.exceptions import AppException
 from app.core.logging import setup_logging, log_request, log_error
-from app.api import auth, queue, gmail
+from app.api import auth, queue, gmail, stats, conversations
 
 # Initialize logging
 logger = setup_logging(environment=settings.ENVIRONMENT, log_level=settings.LOG_LEVEL)
@@ -144,16 +144,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains"
             )
 
-        # Content Security Policy - adjust based on your needs
-        # This is a strict policy, relax if needed for your frontend
+        # Content Security Policy - strict security policy
+        # Note: Modern frameworks like React/Vue may require nonces or hashes for inline scripts
+        # If needed, use nonce-based CSP instead of unsafe-inline
         if settings.is_production:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                "style-src 'self' 'unsafe-inline'; "
+                "script-src 'self'; "
+                "style-src 'self'; "
                 "img-src 'self' data: https:; "
                 "font-src 'self' data:; "
-                "connect-src 'self'"
+                "connect-src 'self'; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
+                "frame-ancestors 'none'; "
+                "upgrade-insecure-requests"
             )
 
         return response
@@ -258,6 +264,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(gmail.router, prefix="/api", tags=["Gmail OAuth"])
 app.include_router(queue.router, prefix="/api/queue", tags=["Review Queue"])
+app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
+app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
 
 
 @app.get("/")

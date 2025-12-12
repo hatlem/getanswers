@@ -9,7 +9,7 @@ import type { ActionCard as ActionCardType, ActionType, ObjectiveStatus } from '
 interface CenterColumnProps {
   selectedCardId?: string;
   onSelectCard: (card: ActionCardType) => void;
-  onAction: (cardId: string, action: ActionType) => void;
+  onAction: (cardId: string, action: ActionType, card: ActionCardType) => void;
   activeFilter: 'all' | 'high_risk' | 'low_confidence';
   onFilterChange: (filter: 'all' | 'high_risk' | 'low_confidence') => void;
   activeView: ObjectiveStatus | 'needs_decision';
@@ -31,7 +31,7 @@ export function CenterColumn({
 }: CenterColumnProps) {
   // Fetch queue data
   const {
-    data: cards = [],
+    data: queueResponse,
     isLoading,
     error,
     refetch
@@ -39,6 +39,8 @@ export function CenterColumn({
     filter: activeFilter,
     status: activeView === 'needs_decision' ? 'needs_decision' : activeView,
   });
+
+  const cards = queueResponse?.cards || [];
 
   // Filter cards based on active filter
   const filteredCards = cards.filter((card) => {

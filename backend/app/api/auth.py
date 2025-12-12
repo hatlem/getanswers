@@ -29,6 +29,7 @@ from app.core.exceptions import (
 )
 from app.core.logging import logger
 from app.core.audit import AuditLog
+from app.core.utils import get_client_ip
 from app.models import User, MagicLink
 from app.api.deps import get_current_user
 from app.services.email import email_service
@@ -39,32 +40,6 @@ router = APIRouter()
 # Rate limiting configuration
 MAGIC_LINK_RATE_LIMIT = 3  # Max requests per hour
 MAGIC_LINK_RATE_WINDOW = 3600  # 1 hour in seconds
-
-
-def get_client_ip(request: Request) -> str:
-    """
-    Extract client IP address from request.
-
-    Checks X-Forwarded-For header first (for proxied requests),
-    then falls back to direct client IP.
-
-    Args:
-        request: FastAPI request object
-
-    Returns:
-        Client IP address as string
-    """
-    # Check X-Forwarded-For header (for requests through proxies/load balancers)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # X-Forwarded-For can contain multiple IPs, take the first one (client IP)
-        return forwarded_for.split(",")[0].strip()
-
-    # Fall back to direct client IP
-    if request.client:
-        return request.client.host
-
-    return "unknown"
 
 
 async def check_magic_link_rate_limit(email: str, redis_client: redis.Redis) -> bool:
@@ -101,8 +76,9 @@ async def check_magic_link_rate_limit(email: str, redis_client: redis.Redis) -> 
 
     except Exception as e:
         logger.error(f"Error checking rate limit for {email}: {str(e)}")
-        # On error, allow the request (fail open)
-        return False
+        # On error, deny the request (fail closed) for security
+        # This prevents abuse if Redis is down or misconfigured
+        return True
 
 
 # Request/Response Schemas
@@ -119,6 +95,10 @@ class LoginRequest(BaseModel):
 
 class MagicLinkRequest(BaseModel):
     email: EmailStr
+
+
+class VerifyMagicLinkRequest(BaseModel):
+    token: str = Field(..., description="Magic link token from email")
 
 
 class UserResponse(BaseModel):
@@ -384,10 +364,10 @@ async def request_magic_link(
     return MessageResponse(message="Check your email for the magic link")
 
 
-@router.get("/verify", response_model=AuthResponse)
+@router.post("/verify", response_model=AuthResponse)
 async def verify_magic_link(
     req: Request,
-    token: str = Query(..., description="Magic link token from email"),
+    request: VerifyMagicLinkRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """Verify a magic link token and authenticate the user."""
@@ -395,7 +375,7 @@ async def verify_magic_link(
 
     try:
         # Find magic link
-        result = await db.execute(select(MagicLink).where(MagicLink.token == token))
+        result = await db.execute(select(MagicLink).where(MagicLink.token == request.token))
         magic_link = result.scalar_one_or_none()
 
         if not magic_link:

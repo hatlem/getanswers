@@ -6,12 +6,23 @@ import type {
   ActionCard,
   ConversationThread,
   NavigationCount,
-  EfficiencyStats
+  EfficiencyStats,
+  QueueResponse
 } from '../types';
 
 // API Configuration
 const getBaseUrl = (): string => {
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  // If VITE_API_BASE_URL is set (even to empty string), use it
+  // Empty string means use relative URLs (for proxy setup)
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl !== undefined && envUrl !== '') {
+    return envUrl;
+  }
+  // If envUrl is empty string or undefined, use relative URLs for proxy or default
+  if (envUrl === '') {
+    return '';
+  }
+  return 'http://localhost:8000';
 };
 
 // Auth Token Management
@@ -48,7 +59,7 @@ export interface AuthResponse {
   user: User;
 }
 
-export interface QueueParams {
+export interface QueueParams extends Record<string, unknown> {
   filter?: 'all' | 'high_risk' | 'low_confidence';
   status?: string;
   limit?: number;
@@ -79,9 +90,8 @@ class HttpClient {
   ): Promise<T> {
     const token = tokenManager.get();
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
 
     // Add Authorization header if token exists
@@ -242,8 +252,8 @@ export const api = {
 
   // Queue management endpoints
   queue: {
-    getQueue: async (params?: QueueParams): Promise<ActionCard[]> => {
-      return httpClient.get<ActionCard[]>('/api/queue', params);
+    getQueue: async (params?: QueueParams): Promise<QueueResponse> => {
+      return httpClient.get<QueueResponse>('/api/queue', params);
     },
 
     approve: async (id: string): Promise<ActionCard> => {

@@ -117,11 +117,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       },
 
-      verifyMagicLink: async (token: string) => {
+      verifyMagicLink: async (token: string): Promise<void> => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/verify?token=${token}`, {
-            method: 'GET',
+          const response = await fetch(`${API_BASE}/auth/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
             credentials: 'include',
           });
 
@@ -146,12 +148,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       },
 
-      logout: () => {
+      logout: (): void => {
         fetch(`${API_BASE}/auth/logout`, {
           method: 'POST',
           credentials: 'include',
-        }).catch(() => {
-          // Ignore errors on logout
+        }).catch((error) => {
+          // Log error but don't block logout
+          console.error('Logout API call failed:', error);
         });
 
         set({
@@ -167,7 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         window.location.href = `${API_BASE}/auth/gmail`;
       },
 
-      disconnectGmail: async () => {
+      disconnectGmail: async (): Promise<void> => {
         try {
           const response = await fetch(`${API_BASE}/auth/gmail/disconnect`, {
             method: 'POST',
@@ -182,7 +185,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       },
 
-      handleGmailCallback: async (code: string) => {
+      handleGmailCallback: async (code: string): Promise<void> => {
         set({ isLoading: true, error: null });
         try {
           const response = await fetch(`${API_BASE}/auth/gmail/callback?code=${code}`, {
@@ -207,7 +210,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       clearError: () => set({ error: null }),
 
-  checkAuth: async () => {
+  checkAuth: async (): Promise<void> => {
     set({ isLoading: true });
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {

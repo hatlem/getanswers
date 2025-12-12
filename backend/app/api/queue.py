@@ -4,7 +4,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, and_, or_, literal_column
 from sqlalchemy.orm import selectinload, joinedload
 from datetime import datetime, timedelta
 
@@ -17,22 +17,13 @@ from app.core.exceptions import (
 )
 from app.core.logging import logger
 from app.core.audit import AuditLog
+from app.core.utils import get_client_ip
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.agent_action import AgentAction, ActionStatus, RiskLevel, ActionType
 from app.models.conversation import Conversation
 from app.models.message import Message, MessageDirection
 from app.models.objective import Objective, ObjectiveStatus
-
-
-def get_client_ip(request: Request) -> str:
-    """Extract client IP address from request."""
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
 
 
 router = APIRouter()
@@ -110,7 +101,7 @@ class OverrideRequest(BaseModel):
 
 class EditRequest(BaseModel):
     """Request body for editing an action."""
-    edited_content: str = Field(..., description="The edited content to send instead")
+    edited_content: str = Field(..., description="The edited content to send instead", max_length=50000)
 
 
 class EscalateRequest(BaseModel):
@@ -230,7 +221,7 @@ async def get_review_queue(
     status: Optional[str] = Query(None, description="Filter by status: pending, approved, rejected"),
     risk: Optional[str] = Query(None, description="Filter by risk level: high, medium, low"),
     limit: int = Query(20, ge=1, le=100, description="Number of items to return"),
-    offset: int = Query(0, ge=0, description="Number of items to skip"),
+    offset: int = Query(0, ge=0, le=10000, description="Number of items to skip"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -807,13 +798,16 @@ async def get_stats(
     - Overall efficiency rate
     - Average confidence score
     - Average response time
+
+    Uses CTEs to optimize into a single query instead of multiple round trips.
     """
     # Time window: last 30 days
     time_window = datetime.utcnow() - timedelta(days=30)
 
-    # Total emails (total messages received)
-    total_query = (
-        select(func.count(Message.id))
+    # Build a single query with CTEs for all stats
+    # CTE 1: Total emails received
+    total_emails_cte = (
+        select(func.count(Message.id).label('count'))
         .join(Message.conversation)
         .join(Conversation.objective)
         .where(
@@ -823,13 +817,11 @@ async def get_stats(
                 Message.created_at >= time_window
             )
         )
-    )
-    result = await db.execute(total_query)
-    total_emails = result.scalar() or 0
+    ).cte('total_emails')
 
-    # Emails handled by AI (approved + edited actions)
-    handled_query = (
-        select(func.count(AgentAction.id))
+    # CTE 2: Emails handled by AI (approved + edited)
+    handled_cte = (
+        select(func.count(AgentAction.id).label('count'))
         .join(AgentAction.conversation)
         .join(Conversation.objective)
         .where(
@@ -842,13 +834,11 @@ async def get_stats(
                 AgentAction.created_at >= time_window
             )
         )
-    )
-    result = await db.execute(handled_query)
-    handled_by_ai = result.scalar() or 0
+    ).cte('handled')
 
-    # Pending review
-    pending_query = (
-        select(func.count(AgentAction.id))
+    # CTE 3: Pending review
+    pending_cte = (
+        select(func.count(AgentAction.id).label('count'))
         .join(AgentAction.conversation)
         .join(Conversation.objective)
         .where(
@@ -857,18 +847,11 @@ async def get_stats(
                 AgentAction.status == ActionStatus.PENDING
             )
         )
-    )
-    result = await db.execute(pending_query)
-    pending_review = result.scalar() or 0
+    ).cte('pending')
 
-    # Calculate efficiency rate
-    efficiency_rate = 0.0
-    if total_emails > 0:
-        efficiency_rate = (handled_by_ai / total_emails) * 100
-
-    # Average confidence score
-    avg_confidence_query = (
-        select(func.avg(AgentAction.confidence_score))
+    # CTE 4: Average confidence score
+    avg_confidence_cte = (
+        select(func.avg(AgentAction.confidence_score).label('avg'))
         .join(AgentAction.conversation)
         .join(Conversation.objective)
         .where(
@@ -877,18 +860,14 @@ async def get_stats(
                 AgentAction.created_at >= time_window
             )
         )
-    )
-    result = await db.execute(avg_confidence_query)
-    avg_confidence = result.scalar() or 0.0
-    avg_confidence = float(avg_confidence) * 100  # Convert to percentage
+    ).cte('avg_confidence')
 
-    # Average response time (time between message received and action approved)
-    # This is more complex - we need to join messages with actions
-    avg_response_query = (
+    # CTE 5: Average response time
+    avg_response_cte = (
         select(
             func.avg(
                 func.extract('epoch', AgentAction.approved_at - Message.sent_at)
-            )
+            ).label('avg')
         )
         .join(AgentAction.conversation)
         .join(Conversation.messages)
@@ -901,11 +880,41 @@ async def get_stats(
                 AgentAction.created_at >= time_window
             )
         )
-    )
-    result = await db.execute(avg_response_query)
-    avg_response_time = result.scalar()
+    ).cte('avg_response')
+
+    # Combine all CTEs into a single query
+    combined_query = select(
+        total_emails_cte.c.count.label('total_emails'),
+        handled_cte.c.count.label('handled_by_ai'),
+        pending_cte.c.count.label('pending_review'),
+        avg_confidence_cte.c.avg.label('avg_confidence'),
+        avg_response_cte.c.avg.label('avg_response_time')
+    ).select_from(total_emails_cte).select_from(handled_cte).select_from(
+        pending_cte
+    ).select_from(avg_confidence_cte).select_from(avg_response_cte)
+
+    # Execute single query
+    result = await db.execute(combined_query)
+    row = result.one()
+
+    # Extract values with defaults
+    total_emails = row.total_emails or 0
+    handled_by_ai = row.handled_by_ai or 0
+    pending_review = row.pending_review or 0
+    avg_confidence = row.avg_confidence or 0.0
+    avg_response_time = row.avg_response_time
+
+    # Calculate efficiency rate
+    efficiency_rate = 0.0
+    if total_emails > 0:
+        efficiency_rate = (handled_by_ai / total_emails) * 100
+
+    # Convert avg_confidence to percentage
+    avg_confidence = float(avg_confidence) * 100
+
+    # Convert avg_response_time to hours if present
     if avg_response_time:
-        avg_response_time = float(avg_response_time) / 3600  # Convert to hours
+        avg_response_time = float(avg_response_time) / 3600
 
     return StatsResponse(
         total_emails=total_emails,

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { LucideIcon, CheckCircle2, Inbox, Search, Filter } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { CheckCircle2, Inbox, Search, Filter } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface EmptyStateProps {

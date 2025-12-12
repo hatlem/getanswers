@@ -1,13 +1,14 @@
 import { forwardRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref' | 'children'> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const variants = {
@@ -42,8 +43,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <motion.button
-        whileHover={!isDisabled ? { scale: 1.02 } : {}}
-        whileTap={!isDisabled ? { scale: 0.98 } : {}}
+        whileHover={!isDisabled ? { scale: 1.02 } : undefined}
+        whileTap={!isDisabled ? { scale: 0.98 } : undefined}
         ref={ref}
         disabled={isDisabled}
         className={cn(

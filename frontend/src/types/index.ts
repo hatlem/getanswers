@@ -155,3 +155,14 @@ export interface GmailCallbackParams {
   code: string;
   state: string;
 }
+
+// Queue Response type (from backend)
+export interface QueueResponse {
+  cards: ActionCard[];
+  total: number;
+  needs_decision: number;
+  waiting_on_others: number;
+  handled_by_ai: number;
+  scheduled_done: number;
+  muted: number;
+}

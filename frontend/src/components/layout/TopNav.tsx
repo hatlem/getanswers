@@ -4,12 +4,15 @@ import { cn, getInitials } from '../../lib/utils';
 import type { GlobalStatus, User } from '../../types';
 
 interface TopNavProps {
-  user: User;
-  globalStatus: GlobalStatus;
+  user: User | null;
+  globalStatus: GlobalStatus | null;
   onSearch?: (query: string) => void;
 }
 
 export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
+  // Default values for when data is not yet loaded
+  const displayUser = user || { name: 'Loading...', autonomyLevel: 'moderate' as const };
+  const displayStatus = globalStatus || { status: 'all_clear' as const, message: 'Loading...', pendingCount: 0 };
   const statusStyles = {
     all_clear: {
       indicator: 'bg-success',
@@ -25,7 +28,7 @@ export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
     },
   };
 
-  const currentStatus = statusStyles[globalStatus.status];
+  const currentStatus = statusStyles[displayStatus.status];
 
   return (
     <header className="h-16 bg-surface-elevated border-b border-surface-border flex items-center justify-between px-6 shrink-0">
@@ -53,7 +56,7 @@ export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
         >
           <div className={cn('w-2 h-2 rounded-full', currentStatus.indicator)} />
           <span className={cn('text-sm font-medium font-mono', currentStatus.text)}>
-            {globalStatus.message}
+            {displayStatus.message}
           </span>
         </motion.div>
       </div>
@@ -90,7 +93,7 @@ export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
         <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-card border border-surface-border hover:border-accent-cyan/30 hover:bg-surface-hover transition-all group">
           <Shield className="w-4 h-4 text-accent-cyan" />
           <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-            Autonomy: <span className="font-semibold text-text-primary capitalize">{user.autonomyLevel}</span>
+            Autonomy: <span className="font-semibold text-text-primary capitalize">{displayUser.autonomyLevel}</span>
           </span>
         </button>
 
@@ -99,10 +102,10 @@ export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
             style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
-            {getInitials(user.name)}
+            {getInitials(displayUser.name)}
           </div>
           <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
-            {user.name}
+            {displayUser.name}
           </span>
           <ChevronDown className="w-4 h-4 text-text-muted group-hover:text-text-secondary transition-colors" />
         </button>
