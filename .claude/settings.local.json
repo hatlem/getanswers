@@ -43,7 +43,11 @@
       "mcp__playwright__browser_network_requests",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_install",
-      "Bash(PGPASSWORD='XXsHcWWzLjbRAEYwmpxgpVyQTdXXWbyE' psql:*)"
+      "Bash(PGPASSWORD='XXsHcWWzLjbRAEYwmpxgpVyQTdXXWbyE' psql:*)",
+      "Skill(frontend-tester)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

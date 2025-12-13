@@ -41,12 +41,56 @@ def process_single_email(self, message_id: str):
                     logger.error(f"Message {message_id} not found")
                     return
 
-                # TODO: Implement AI processing through TriageService
-                # from app.services.triage_service import TriageService
-                # triage_service = TriageService(db)
-                # await triage_service.process_message(message)
+                # Get user for this message
+                from sqlalchemy.orm import selectinload
+                from app.models.conversation import Conversation
+                from app.models.objective import Objective
 
-                logger.info(f"Successfully processed message {message_id}")
+                # Load message with conversation and objective
+                result = await db.execute(
+                    select(Message)
+                    .options(
+                        selectinload(Message.conversation)
+                        .selectinload(Conversation.objective)
+                    )
+                    .where(Message.id == UUID(message_id))
+                )
+                message = result.scalar_one_or_none()
+
+                if not message or not message.conversation or not message.conversation.objective:
+                    logger.error(f"Message {message_id} has no associated objective")
+                    return
+
+                user_id = message.conversation.objective.user_id
+
+                # Initialize services and process the email
+                from app.services.gmail import GmailService
+                from app.services.agent import AgentService
+                from app.services.triage import TriageService
+
+                gmail_service = GmailService()
+                agent_service = AgentService()
+                triage_service = TriageService(db, gmail_service, agent_service)
+
+                # Build a gmail_message dict from our Message model
+                gmail_message = {
+                    'id': message.gmail_message_id,
+                    'threadId': message.conversation.gmail_thread_id,
+                    'from': {
+                        'name': message.sender_name,
+                        'email': message.sender_email
+                    },
+                    'subject': message.subject,
+                    'body_text': message.body_text,
+                    'body_html': message.body_html,
+                    'sent_at': message.sent_at
+                }
+
+                result = await triage_service.process_new_email(user_id, gmail_message)
+                logger.info(
+                    f"Successfully processed message {message_id}: "
+                    f"action_id={result.action_id}, confidence={result.confidence:.1f}"
+                )
 
             except Exception as e:
                 logger.error(f"Error processing message {message_id}: {str(e)}")

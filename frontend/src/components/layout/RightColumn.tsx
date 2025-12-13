@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Box, RefreshCcw, Settings } from 'lucide-react';
+import { Box } from 'lucide-react';
 import { TimelineItem } from '../timeline/TimelineItem';
 import { ConversationHeaderSkeleton, AgentSummarySkeleton, TimelineSkeleton } from '../ui/Skeleton';
 import { InlineError } from '../ui/ErrorState';
@@ -9,8 +9,6 @@ import { cn } from '../../lib/utils';
 
 interface RightColumnProps {
   objectiveId: string | null;
-  onTakeOver?: () => void;
-  onChangePolicy?: () => void;
 }
 
 const statusStyles = {
@@ -41,7 +39,7 @@ const statusStyles = {
   },
 };
 
-export function RightColumn({ objectiveId, onTakeOver, onChangePolicy }: RightColumnProps) {
+export function RightColumn({ objectiveId }: RightColumnProps) {
   // Fetch conversation by objective ID
   const {
     data: conversation,
@@ -160,28 +158,6 @@ export function RightColumn({ objectiveId, onTakeOver, onChangePolicy }: RightCo
         </div>
       </div>
 
-      {/* Controls */}
-      <motion.div
-        className="p-4 border-t border-surface-border space-y-2"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <button
-          onClick={onTakeOver}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-card border border-surface-border text-text-secondary hover:text-text-primary hover:border-accent-cyan/30 transition-all text-sm font-medium"
-        >
-          <RefreshCcw className="w-4 h-4" />
-          <span>Take Over Thread</span>
-        </button>
-        <button
-          onClick={onChangePolicy}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-card border border-surface-border text-text-secondary hover:text-text-primary hover:border-accent-purple/30 transition-all text-sm font-medium"
-        >
-          <Settings className="w-4 h-4" />
-          <span>Change Policy for Sender</span>
-        </button>
-      </motion.div>
     </aside>
   );
 }

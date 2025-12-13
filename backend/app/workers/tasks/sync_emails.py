@@ -45,12 +45,20 @@ def sync_user_emails(self, user_id: str):
                     logger.warning(f"User {user_id} has no Gmail credentials")
                     return
 
-                # TODO: Implement TriageService.sync_user_inbox()
-                # from app.services.triage_service import TriageService
-                # triage_service = TriageService(db)
-                # await triage_service.sync_user_inbox(user)
+                # Initialize services and sync inbox
+                from app.services.gmail import GmailService
+                from app.services.agent import AgentService
+                from app.services.triage import TriageService
 
-                logger.info(f"Successfully synced emails for user {user_id}")
+                gmail_service = GmailService()
+                agent_service = AgentService()
+                triage_service = TriageService(db, gmail_service, agent_service)
+
+                result = await triage_service.sync_user_inbox(user.id)
+                logger.info(
+                    f"Successfully synced emails for user {user_id}: "
+                    f"{result.processed}/{result.new_messages} processed, {result.errors} errors"
+                )
 
             except Exception as e:
                 logger.error(f"Error syncing emails for user {user_id}: {str(e)}")

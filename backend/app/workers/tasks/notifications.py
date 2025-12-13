@@ -54,12 +54,20 @@ def send_action_notification(user_id: str, action_id: str):
                     logger.info(f"Action {action_id} is not high-risk, skipping notification")
                     return
 
-                # TODO: Implement email sending
-                # from app.services.email_service import EmailService
-                # email_service = EmailService()
-                # await email_service.send_action_notification(user, action)
+                # Send notification email
+                from app.services.email import email_service
 
-                logger.info(f"Sent action notification to user {user_id} for action {action_id}")
+                success = await email_service.send_action_notification(
+                    to=user.email,
+                    action_summary=action.proposed_content[:200] if action.proposed_content else "Action pending review",
+                    action_id=str(action_id),
+                    risk_level=action.risk_level.value.upper()
+                )
+
+                if success:
+                    logger.info(f"Sent action notification to user {user_id} for action {action_id}")
+                else:
+                    logger.warning(f"Failed to send action notification to user {user_id}")
 
             except Exception as e:
                 logger.error(f"Error sending action notification: {str(e)}")
@@ -99,15 +107,89 @@ def send_daily_digest(user_id: str):
                     logger.error(f"User {user_id} not found")
                     return
 
-                # TODO: Implement digest compilation and sending
-                # from app.services.email_service import EmailService
-                # from app.services.digest_service import DigestService
-                # digest_service = DigestService(db)
-                # digest_data = await digest_service.compile_daily_digest(user)
-                # email_service = EmailService()
-                # await email_service.send_daily_digest(user, digest_data)
+                # Get stats for user
+                from datetime import datetime, timedelta
+                from sqlalchemy import func, and_, or_
+                from app.models.agent_action import AgentAction, ActionStatus
+                from app.models.conversation import Conversation
+                from app.models.objective import Objective
 
-                logger.info(f"Sent daily digest to user {user_id}")
+                time_window = datetime.utcnow() - timedelta(days=1)
+
+                # Count emails processed today
+                processed_query = (
+                    select(func.count(AgentAction.id))
+                    .join(AgentAction.conversation)
+                    .join(Conversation.objective)
+                    .where(
+                        and_(
+                            Objective.user_id == UUID(user_id),
+                            AgentAction.created_at >= time_window
+                        )
+                    )
+                )
+                result = await db.execute(processed_query)
+                emails_processed = result.scalar() or 0
+
+                # Count responses sent
+                sent_query = (
+                    select(func.count(AgentAction.id))
+                    .join(AgentAction.conversation)
+                    .join(Conversation.objective)
+                    .where(
+                        and_(
+                            Objective.user_id == UUID(user_id),
+                            AgentAction.created_at >= time_window,
+                            or_(
+                                AgentAction.status == ActionStatus.APPROVED,
+                                AgentAction.status == ActionStatus.EDITED
+                            )
+                        )
+                    )
+                )
+                result = await db.execute(sent_query)
+                responses_sent = result.scalar() or 0
+
+                # Get pending actions
+                pending_query = (
+                    select(AgentAction)
+                    .join(AgentAction.conversation)
+                    .join(Conversation.objective)
+                    .where(
+                        and_(
+                            Objective.user_id == UUID(user_id),
+                            AgentAction.status == ActionStatus.PENDING
+                        )
+                    )
+                    .limit(10)
+                )
+                result = await db.execute(pending_query)
+                pending_actions = result.scalars().all()
+
+                stats = {
+                    'emails_processed': emails_processed,
+                    'responses_sent': responses_sent,
+                    'time_saved_minutes': responses_sent * 5  # Estimate 5 min saved per response
+                }
+
+                pending_list = [
+                    {'summary': action.proposed_content[:100] if action.proposed_content else 'Action pending'}
+                    for action in pending_actions
+                ]
+
+                # Send digest email
+                from app.services.email import email_service
+
+                success = await email_service.send_daily_digest(
+                    to=user.email,
+                    stats=stats,
+                    pending_actions=pending_list
+                )
+
+                if success:
+                    logger.info(f"Sent daily digest to user {user_id}")
+                else:
+                    logger.warning(f"Failed to send daily digest to user {user_id}")
 
             except Exception as e:
                 logger.error(f"Error sending daily digest to user {user_id}: {str(e)}")

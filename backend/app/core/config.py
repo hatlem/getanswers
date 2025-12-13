@@ -92,6 +92,42 @@ class Settings(BaseSettings):
         description="Sentry DSN for error tracking (optional)"
     )
 
+    # Stripe Configuration
+    STRIPE_SECRET_KEY: Optional[str] = Field(
+        default=None,
+        description="Stripe test mode secret key"
+    )
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = Field(
+        default=None,
+        description="Stripe test mode publishable key"
+    )
+    STRIPE_LIVE_SECRET_KEY: Optional[str] = Field(
+        default=None,
+        description="Stripe live mode secret key"
+    )
+    STRIPE_LIVE_PUBLISHABLE_KEY: Optional[str] = Field(
+        default=None,
+        description="Stripe live mode publishable key"
+    )
+    STRIPE_WEBHOOK_SECRET: Optional[str] = Field(
+        default=None,
+        description="Stripe webhook signing secret"
+    )
+
+    # Mission Control (get-platform) Integration
+    GET_PLATFORM_API_URL: str = Field(
+        default="https://getplatform.co",
+        description="Get Platform API URL for centralized configuration"
+    )
+    GET_PLATFORM_API_KEY: Optional[str] = Field(
+        default=None,
+        description="API key for get-platform integration"
+    )
+    GET_PLATFORM_WEBHOOK_SECRET: Optional[str] = Field(
+        default=None,
+        description="Webhook secret for get-platform notifications"
+    )
+
     # CORS Settings
     CORS_ORIGINS: list[str] = Field(
         default=["http://localhost:5073", "http://localhost:5173", "http://localhost:3000"],

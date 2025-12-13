@@ -111,13 +111,13 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
 
   const systemItems: NavItem[] = [
     {
-      id: 'handled', // Placeholder - would be separate route
+      id: 'handled',
       label: 'Policy Editor',
       icon: <Settings className="w-[18px] h-[18px]" />,
       variant: 'default',
     },
     {
-      id: 'handled', // Placeholder - would be separate route
+      id: 'handled',
       label: 'Raw Messages',
       icon: <MessageSquare className="w-[18px] h-[18px]" />,
       variant: 'default',

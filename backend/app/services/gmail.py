@@ -752,3 +752,59 @@ class GmailService:
         except Exception as e:
             logger.error(f"Error getting profile: {str(e)}")
             raise GmailAPIError(f"Failed to get profile: {str(e)}")
+
+    async def modify_labels(
+        self,
+        credentials: dict,
+        message_id: str,
+        add_labels: List[str] = None,
+        remove_labels: List[str] = None
+    ) -> dict:
+        """Modify labels on a message (add or remove).
+
+        Args:
+            credentials: OAuth credentials dictionary
+            message_id: Gmail message ID
+            add_labels: List of label IDs to add
+            remove_labels: List of label IDs to remove
+
+        Returns:
+            Updated message object
+
+        Raises:
+            GmailAPIError: If label modification fails
+
+        Example:
+            # Archive a message (remove from inbox)
+            await gmail_service.modify_labels(
+                credentials=user.gmail_credentials,
+                message_id="18abc123",
+                remove_labels=['INBOX']
+            )
+        """
+        try:
+            service = self._build_gmail_service(credentials)
+
+            body = {}
+            if add_labels:
+                body['addLabelIds'] = add_labels
+            if remove_labels:
+                body['removeLabelIds'] = remove_labels
+
+            result = service.users().messages().modify(
+                userId='me',
+                id=message_id,
+                body=body
+            ).execute()
+
+            logger.info(f"Modified labels on message {message_id}")
+            return result
+
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise GmailAPIError(f"Message {message_id} not found")
+            logger.error(f"Gmail API error modifying labels: {str(e)}")
+            raise GmailAPIError(f"Failed to modify labels: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error modifying labels: {str(e)}")
+            raise GmailAPIError(f"Failed to modify labels: {str(e)}")

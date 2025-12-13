@@ -6,10 +6,9 @@ import type { GlobalStatus, User } from '../../types';
 interface TopNavProps {
   user: User | null;
   globalStatus: GlobalStatus | null;
-  onSearch?: (query: string) => void;
 }
 
-export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
+export function TopNav({ user, globalStatus }: TopNavProps) {
   // Default values for when data is not yet loaded
   const displayUser = user || { name: 'Loading...', autonomyLevel: 'moderate' as const };
   const displayStatus = globalStatus || { status: 'all_clear' as const, message: 'Loading...', pendingCount: 0 };
@@ -74,7 +73,7 @@ export function TopNav({ user, globalStatus, onSearch }: TopNavProps) {
             type="text"
             placeholder="Search by Objective, Sender, or Policy..."
             className="w-full h-11 pl-12 pr-20 rounded-xl bg-surface-card border border-surface-border text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-accent-cyan/50 focus:ring-1 focus:ring-accent-cyan/20 transition-all"
-            onChange={(e) => onSearch?.(e.target.value)}
+            disabled
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-border rounded">⌘</kbd>

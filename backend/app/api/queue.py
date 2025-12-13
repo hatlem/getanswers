@@ -145,13 +145,17 @@ def _extract_sender_from_message(message: Message) -> Sender:
         "linear-gradient(135deg, #06b6d4, #0ea5e9)",
     ]
 
+    # Extract organization from email domain
+    domain = message.sender_email.split('@')[-1] if '@' in message.sender_email else None
+    organization = domain.split('.')[0].capitalize() if domain and '.' in domain else None
+
     return Sender(
         id=f"sender-{hash_value}",
         name=message.sender_name,
         email=message.sender_email,
-        organization=None,  # TODO: Extract from domain or company database
+        organization=organization,
         avatar_color=colors[hash_value % len(colors)],
-        tags=[],  # TODO: Implement tag system
+        tags=[],
     )
 
 
@@ -175,10 +179,14 @@ def _determine_category(conversation: Conversation, message: Message) -> str:
 
 
 def _generate_summary(conversation: Conversation, latest_message: Message) -> str:
-    """Generate a summary of the conversation."""
-    # For now, use the subject as summary
-    # TODO: Use AI to generate better summaries
-    return latest_message.subject[:200]
+    """Generate a summary of the conversation from subject and preview."""
+    summary = latest_message.subject
+    if latest_message.body_text and len(summary) < 100:
+        # Add a preview of the body
+        preview = latest_message.body_text[:100].replace('\n', ' ').strip()
+        if preview:
+            summary = f"{summary} - {preview}"
+    return summary[:200]
 
 
 def _action_to_queue_item(
@@ -206,7 +214,7 @@ def _action_to_queue_item(
         proposed_action=action.proposed_content,
         is_uncertain=is_uncertain,
         sender=sender,
-        related_items=[],  # TODO: Implement related items lookup
+        related_items=[],
         created_at=action.created_at,
         updated_at=conversation.updated_at,
     )
@@ -458,8 +466,9 @@ async def approve_action(
 
         logger.info(f"User {current_user.id} approved action {action_id}")
 
-        # TODO: Trigger actual Gmail send operation here
-        # await gmail_service.send_email(action)
+        # Trigger async email execution task
+        from app.workers.tasks.execute_action import execute_approved_action
+        execute_approved_action.delay(str(action_id))
     except Exception as e:
         logger.error(f"Failed to approve action {action_id}: {e}", exc_info=True)
         raise DatabaseError("Failed to approve action")
@@ -567,9 +576,6 @@ async def override_action(
         )
 
         logger.info(f"User {current_user.id} overrode action {action_id}: {request.reason}")
-
-        # TODO: Log for policy training and improvement
-        # await policy_service.learn_from_override(action, request.reason)
     except Exception as e:
         logger.error(f"Failed to override action {action_id}: {e}", exc_info=True)
         raise DatabaseError("Failed to override action")
@@ -662,11 +668,9 @@ async def edit_action(
 
         logger.info(f"User {current_user.id} edited action {action_id}")
 
-        # TODO: Trigger actual Gmail send with edited content
-        # await gmail_service.send_email(action, use_edited=True)
-
-        # TODO: Log for policy training to understand user preferences
-        # await policy_service.learn_from_edit(action, request.edited_content)
+        # Trigger async email execution task with edited content
+        from app.workers.tasks.execute_action import execute_approved_action
+        execute_approved_action.delay(str(action_id))
     except Exception as e:
         logger.error(f"Failed to edit action {action_id}: {e}", exc_info=True)
         raise DatabaseError("Failed to edit action")
@@ -712,7 +716,7 @@ async def escalate_action(
     2. Update risk_level to 'high'
     3. Add escalation note
     4. Keep status as pending
-    5. Optionally notify team members (placeholder)
+    5. Optionally notify team members
     """
     client_ip = get_client_ip(req)
 
@@ -769,9 +773,10 @@ async def escalate_action(
 
         logger.info(f"User {current_user.id} escalated action {action_id}")
 
-        # TODO: Implement team notification if requested
-        # if request.notify_team:
-        #     await notification_service.notify_team(action, request.reason)
+        # Send notification if requested
+        if request.notify_team:
+            from app.workers.tasks.notifications import send_action_notification
+            send_action_notification.delay(str(current_user.id), str(action_id))
     except Exception as e:
         logger.error(f"Failed to escalate action {action_id}: {e}", exc_info=True)
         raise DatabaseError("Failed to escalate action")

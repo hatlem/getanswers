@@ -124,9 +124,6 @@ function Dashboard() {
       <TopNav
         user={user || null}
         globalStatus={stats?.globalStatus || null}
-        onSearch={(_query) => {
-          // TODO: Implement search functionality
-        }}
       />
 
       <main className="flex-1 flex min-h-0">
@@ -148,12 +145,6 @@ function Dashboard() {
 
         <RightColumn
           objectiveId={selectedObjectiveId}
-          onTakeOver={() => {
-            // TODO: Implement take over functionality
-          }}
-          onChangePolicy={() => {
-            // TODO: Implement change policy functionality
-          }}
         />
       </main>
 

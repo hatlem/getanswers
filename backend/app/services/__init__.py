@@ -33,6 +33,14 @@ from .triage import (
     ProcessingResult,
     ObjectiveGroupingResult,
 )
+from .stripe import (
+    get_stripe_mode,
+    invalidate_stripe_mode_cache,
+    get_stripe_client,
+    get_publishable_key,
+    StripeService,
+)
+from .features import FeatureService
 
 __all__ = [
     # Agent service and models
@@ -63,4 +71,12 @@ __all__ = [
     "ExecutionResult",
     "ProcessingResult",
     "ObjectiveGroupingResult",
+    # Stripe service
+    "get_stripe_mode",
+    "invalidate_stripe_mode_cache",
+    "get_stripe_client",
+    "get_publishable_key",
+    "StripeService",
+    # Feature service
+    "FeatureService",
 ]

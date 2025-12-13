@@ -35,3 +35,6 @@ anthropic==0.40.0
 # Utilities
 python-dotenv==1.0.1
 httpx==0.28.1
+
+# Stripe
+stripe==11.3.0

@@ -7,6 +7,8 @@ from .conversation import Conversation
 from .message import Message, MessageDirection
 from .agent_action import AgentAction, ActionType, RiskLevel, ActionStatus
 from .policy import Policy
+from .subscription import Subscription, SubscriptionStatus, PlanTier, PLAN_LIMITS, get_plan_limit
+from .feature_flag import FeatureFlag, FeatureName, PLAN_FEATURES, get_default_feature_state
 
 
 __all__ = [
@@ -24,4 +26,13 @@ __all__ = [
     "RiskLevel",
     "ActionStatus",
     "Policy",
+    "Subscription",
+    "SubscriptionStatus",
+    "PlanTier",
+    "PLAN_LIMITS",
+    "get_plan_limit",
+    "FeatureFlag",
+    "FeatureName",
+    "PLAN_FEATURES",
+    "get_default_feature_state",
 ]

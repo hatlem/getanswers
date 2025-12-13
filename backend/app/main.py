@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.database import close_db
 from app.core.exceptions import AppException
 from app.core.logging import setup_logging, log_request, log_error
-from app.api import auth, queue, gmail, stats, conversations
+from app.api import auth, queue, gmail, stats, conversations, billing
 
 # Initialize logging
 logger = setup_logging(environment=settings.ENVIRONMENT, log_level=settings.LOG_LEVEL)
@@ -266,6 +266,7 @@ app.include_router(gmail.router, prefix="/api", tags=["Gmail OAuth"])
 app.include_router(queue.router, prefix="/api/queue", tags=["Review Queue"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
 app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
+app.include_router(billing.router, prefix="/api/billing", tags=["Billing"])
 
 
 @app.get("/")
