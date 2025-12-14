@@ -249,8 +249,30 @@ async def register(
     # Create access token
     access_token = create_access_token(data={"sub": str(new_user.id)})
 
+    # Build response manually to avoid lazy loading issues
+    current_org = None
+    if new_user.current_organization_id:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == new_user.current_organization_id)
+        )
+        org = org_result.scalar_one_or_none()
+        if org:
+            current_org = OrganizationInfo(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                is_personal=org.is_personal
+            )
+
     return AuthResponse(
-        user=UserResponse.model_validate(new_user),
+        user=UserResponse(
+            id=new_user.id,
+            email=new_user.email,
+            name=new_user.name,
+            is_super_admin=new_user.is_super_admin,
+            current_organization=current_org,
+            created_at=new_user.created_at
+        ),
         access_token=access_token
     )
 
@@ -303,9 +325,31 @@ async def login(
             user_id=str(user.id),
         )
 
+        # Build response manually to avoid lazy loading issues
+        current_org = None
+        if user.current_organization_id:
+            org_result = await db.execute(
+                select(Organization).where(Organization.id == user.current_organization_id)
+            )
+            org = org_result.scalar_one_or_none()
+            if org:
+                current_org = OrganizationInfo(
+                    id=org.id,
+                    name=org.name,
+                    slug=org.slug,
+                    is_personal=org.is_personal
+                )
+
         logger.info(f"User {user.email} logged in successfully")
         return AuthResponse(
-            user=UserResponse.model_validate(user),
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                is_super_admin=user.is_super_admin,
+                current_organization=current_org,
+                created_at=user.created_at
+            ),
             access_token=access_token
         )
     except AuthenticationError:
@@ -501,9 +545,31 @@ async def verify_magic_link(
             user_id=str(user.id),
         )
 
+        # Build response manually to avoid lazy loading issues
+        current_org = None
+        if user.current_organization_id:
+            org_result = await db.execute(
+                select(Organization).where(Organization.id == user.current_organization_id)
+            )
+            org = org_result.scalar_one_or_none()
+            if org:
+                current_org = OrganizationInfo(
+                    id=org.id,
+                    name=org.name,
+                    slug=org.slug,
+                    is_personal=org.is_personal
+                )
+
         logger.info(f"User {user.email} authenticated via magic link")
         return AuthResponse(
-            user=UserResponse.model_validate(user),
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                name=user.name,
+                is_super_admin=user.is_super_admin,
+                current_organization=current_org,
+                created_at=user.created_at
+            ),
             access_token=access_token
         )
     except (ValidationError, NotFoundError):
@@ -547,7 +613,8 @@ async def get_current_user_info(
 
 @router.post("/refresh", response_model=AuthResponse)
 async def refresh_token(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Refresh the access token for the current user.
@@ -556,8 +623,30 @@ async def refresh_token(
     # Create a new access token
     access_token = create_access_token(data={"sub": str(current_user.id)})
 
+    # Build response manually to avoid lazy loading issues
+    current_org = None
+    if current_user.current_organization_id:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == current_user.current_organization_id)
+        )
+        org = org_result.scalar_one_or_none()
+        if org:
+            current_org = OrganizationInfo(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                is_personal=org.is_personal
+            )
+
     return AuthResponse(
-        user=UserResponse.model_validate(current_user),
+        user=UserResponse(
+            id=current_user.id,
+            email=current_user.email,
+            name=current_user.name,
+            is_super_admin=current_user.is_super_admin,
+            current_organization=current_org,
+            created_at=current_user.created_at
+        ),
         access_token=access_token
     )
 
