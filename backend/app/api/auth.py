@@ -783,7 +783,7 @@ async def get_google_auth_url(
     _oauth_states[state] = datetime.utcnow()
 
     # Build redirect URI - use custom if provided, otherwise default
-    callback_uri = redirect_uri or f"{settings.APP_URL}/auth/google/callback"
+    callback_uri = redirect_uri or f"{settings.APP_URL}/api/auth/callback/google"
 
     # Build authorization URL
     params = {
@@ -836,7 +836,7 @@ async def google_callback(
         raise ValidationError("State token has expired")
 
     # Build redirect URI
-    callback_uri = request.redirect_uri or f"{settings.APP_URL}/auth/google/callback"
+    callback_uri = request.redirect_uri or f"{settings.APP_URL}/api/auth/callback/google"
 
     # Exchange code for tokens
     async with httpx.AsyncClient() as client:

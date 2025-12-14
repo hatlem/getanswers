@@ -51,7 +51,7 @@ export function GoogleAuthCallbackPage() {
       }>('/api/auth/google/callback', {
         code,
         state,
-        redirect_uri: `${window.location.origin}/auth/google/callback`,
+        redirect_uri: `${window.location.origin}/api/auth/callback/google`,
       });
 
       // Store the token and user

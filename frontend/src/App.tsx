@@ -239,7 +239,7 @@ function AppContent() {
         <Route path="/auth/verify" element={<MagicLinkPage />} />
         <Route path="/auth/gmail/callback" element={<GmailCallbackPage />} />
         <Route path="/auth/outlook/callback" element={<OutlookCallbackPage />} />
-        <Route path="/auth/google/callback" element={<GoogleAuthCallbackPage />} />
+        <Route path="/api/auth/callback/google" element={<GoogleAuthCallbackPage />} />
 
         {/* Protected routes */}
         <Route
