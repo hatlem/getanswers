@@ -91,15 +91,25 @@ export interface EfficiencyStats {
   percentage: number;
 }
 
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  is_personal: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatarUrl?: string;
-  autonomyLevel: 'low' | 'medium' | 'high';
+  autonomyLevel?: 'low' | 'medium' | 'high';
   onboarding_completed: boolean;
   needs_password_setup: boolean;
-  createdAt: string;
+  is_super_admin?: boolean;
+  current_organization?: Organization | null;
+  createdAt?: string;
+  created_at?: string;
 }
 
 export interface GlobalStatus {

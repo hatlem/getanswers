@@ -36,8 +36,8 @@ export function GoogleAuthCallbackPage() {
           id: string;
           email: string;
           name: string;
-          is_super_admin: boolean;
-          current_organization: {
+          is_super_admin?: boolean;
+          current_organization?: {
             id: string;
             name: string;
             slug: string;
@@ -45,7 +45,7 @@ export function GoogleAuthCallbackPage() {
           } | null;
           onboarding_completed: boolean;
           needs_password_setup: boolean;
-          created_at: string;
+          created_at?: string;
         };
         access_token: string;
       }>('/api/auth/google/callback', {
@@ -56,7 +56,7 @@ export function GoogleAuthCallbackPage() {
 
       // Store the token and user
       setToken(response.access_token);
-      setUser(response.user);
+      setUser(response.user as any);
 
       // Redirect to dashboard
       navigate('/dashboard', { replace: true });
