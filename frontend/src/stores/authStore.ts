@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '../types';
+import { tokenManager } from '../lib/api';
 
 interface AuthState {
   user: User | null;
@@ -49,7 +50,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             throw new Error(error.message || 'Login failed');
           }
 
-          const { user, gmailConnected } = await response.json();
+          const { user, gmailConnected, access_token } = await response.json();
+          if (access_token) {
+            tokenManager.set(access_token);
+          }
           set({
             user,
             isAuthenticated: true,
@@ -80,7 +84,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             throw new Error(error.message || 'Registration failed');
           }
 
-          const { user } = await response.json();
+          const { user, access_token } = await response.json();
+          if (access_token) {
+            tokenManager.set(access_token);
+          }
           set({
             user,
             isAuthenticated: true,
@@ -135,7 +142,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             throw new Error(error.message || 'Invalid or expired link');
           }
 
-          const { user, gmailConnected } = await response.json();
+          const { user, gmailConnected, access_token } = await response.json();
+          if (access_token) {
+            tokenManager.set(access_token);
+          }
           set({
             user,
             isAuthenticated: true,
@@ -160,6 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           console.error('Logout API call failed:', error);
         });
 
+        tokenManager.remove();
         set({
           user: null,
           isAuthenticated: false,
@@ -215,9 +226,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkAuth: async (): Promise<void> => {
     set({ isLoading: true });
+    const token = tokenManager.get();
+    if (!token) {
+      set({
+        user: null,
+        isAuthenticated: false,
+        gmailConnected: false,
+        isLoading: false
+      });
+      return;
+    }
     try {
       const response = await fetch(`${API_BASE}/api/auth/me`, {
         method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
         credentials: 'include',
       });
 
@@ -230,6 +254,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false
         });
       } else {
+        tokenManager.remove();
         set({
           user: null,
           isAuthenticated: false,
