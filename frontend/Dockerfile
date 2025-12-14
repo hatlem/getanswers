@@ -6,13 +6,16 @@ WORKDIR /app
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+# Force cache invalidation: v3-2025-12-14
+RUN echo "Cache bust timestamp: $(date)"
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code (cache bust: v2)
+# Copy source code
 COPY . .
 
 # Build the app
