@@ -30,6 +30,7 @@ export function CenterColumn({
   activeView,
 }: CenterColumnProps) {
   // Fetch queue data
+  // Map frontend view to backend status: 'needs_decision' -> 'pending'
   const {
     data: queueResponse,
     isLoading,
@@ -37,7 +38,7 @@ export function CenterColumn({
     refetch
   } = useQueue({
     filter: activeFilter,
-    status: activeView === 'needs_decision' ? 'needs_decision' : activeView,
+    status: activeView === 'needs_decision' ? 'pending' : activeView,
   });
 
   const cards = queueResponse?.cards || [];
