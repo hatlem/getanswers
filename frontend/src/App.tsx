@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { TopNav } from './components/layout/TopNav';
 import { LeftColumn } from './components/layout/LeftColumn';
 import { CenterColumn } from './components/layout/CenterColumn';
@@ -12,10 +12,12 @@ import { MagicLinkPage } from './components/auth/MagicLinkPage';
 import { GmailCallbackPage } from './components/auth/GmailCallbackPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EditModal } from './components/modals/EditModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
 import { useAuth } from './hooks/useAuth';
+import { useAuthStore } from './stores/authStore';
 import { useStats } from './hooks/useStats';
 import { useQueueActions } from './hooks/useQueue';
 import { actionToast } from './lib/toast';
@@ -32,6 +34,30 @@ function Dashboard() {
     setActiveFilter,
     setSelectedCard,
   } = useAppStore();
+
+  // Onboarding state - show for new users who haven't completed it
+  const ONBOARDING_KEY = 'getanswers_onboarding_complete';
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { connectGmail, gmailConnected } = useAuthStore();
+
+  // Show onboarding if: URL param says start OR user hasn't completed onboarding yet
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
+    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY) === 'true';
+    const urlTriggered = searchParams.get('onboarding') === 'start';
+    return urlTriggered || !hasCompletedOnboarding;
+  });
+
+  const handleCloseOnboarding = () => {
+    // Mark onboarding as complete
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    setIsOnboardingOpen(false);
+    navigate('/dashboard', { replace: true });
+  };
+
+  const handleConnectGmail = () => {
+    connectGmail();
+  };
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -159,6 +185,13 @@ function Dashboard() {
         card={cardToEdit}
         onSave={handleEditSave}
         isSaving={isEditing}
+      />
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={handleCloseOnboarding}
+        onConnectGmail={handleConnectGmail}
       />
     </div>
   );
