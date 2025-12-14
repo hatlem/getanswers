@@ -47,7 +47,21 @@
       "Skill(frontend-tester)",
       "Bash(find:*)",
       "Bash(rm:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__railway__get-logs",
+      "mcp__railway__list-variables",
+      "mcp__railway__set-variables",
+      "mcp__railway__deploy",
+      "Bash(railway run:*)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "mcp__puppeteer__puppeteer_fill",
+      "mcp__puppeteer__puppeteer_evaluate",
+      "mcp__puppeteer__puppeteer_click",
+      "mcp__railway__list-services",
+      "mcp__railway__list-deployments",
+      "Bash(railway service:*)",
+      "mcp__railway__deploy-template"
     ]
   }
 }

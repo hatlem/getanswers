@@ -1,7 +1,7 @@
 """Add multi-tenancy support with organizations
 
-Revision ID: 003_add_multi_tenancy
-Revises: 002_add_billing_and_features
+Revision ID: 003_multitenancy
+Revises: 002_billing_features
 Create Date: 2024-12-14
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '003_add_multi_tenancy'
+revision: str = '003_multitenancy'
 down_revision: Union[str, None] = '002_billing_features'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

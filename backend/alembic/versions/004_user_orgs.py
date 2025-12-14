@@ -1,7 +1,7 @@
 """Migrate existing users to personal organizations
 
-Revision ID: 004_migrate_existing_users_to_orgs
-Revises: 003_add_multi_tenancy
+Revision ID: 004_user_orgs
+Revises: 003_multitenancy
 Create Date: 2024-12-14
 
 This migration creates a personal organization for each existing user
@@ -19,8 +19,8 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
-revision: str = '004_migrate_existing_users_to_orgs'
-down_revision: Union[str, None] = '003_add_multi_tenancy'
+revision: str = '004_user_orgs'
+down_revision: Union[str, None] = '003_multitenancy'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
