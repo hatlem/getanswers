@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/login`, {
+          const response = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -68,7 +68,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       register: async (name: string, email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/register`, {
+          const response = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password }),
@@ -99,7 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       requestMagicLink: async (email: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/magic-link`, {
+          const response = await fetch(`${API_BASE}/api/auth/magic-link`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       verifyMagicLink: async (token: string): Promise<void> => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/verify`, {
+          const response = await fetch(`${API_BASE}/api/auth/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token }),
@@ -152,7 +152,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       },
 
       logout: (): void => {
-        fetch(`${API_BASE}/auth/logout`, {
+        fetch(`${API_BASE}/api/auth/logout`, {
           method: 'POST',
           credentials: 'include',
         }).catch((error) => {
@@ -170,12 +170,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       connectGmail: () => {
         // Redirect to Gmail OAuth
-        window.location.href = `${API_BASE}/auth/gmail`;
+        window.location.href = `${API_BASE}/api/auth/gmail`;
       },
 
       disconnectGmail: async (): Promise<void> => {
         try {
-          const response = await fetch(`${API_BASE}/auth/gmail/disconnect`, {
+          const response = await fetch(`${API_BASE}/api/auth/gmail/disconnect`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -191,7 +191,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       handleGmailCallback: async (code: string): Promise<void> => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/gmail/callback?code=${code}`, {
+          const response = await fetch(`${API_BASE}/api/auth/gmail/callback?code=${code}`, {
             method: 'GET',
             credentials: 'include',
           });
@@ -216,7 +216,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuth: async (): Promise<void> => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
+      const response = await fetch(`${API_BASE}/api/auth/me`, {
         method: 'GET',
         credentials: 'include',
       });

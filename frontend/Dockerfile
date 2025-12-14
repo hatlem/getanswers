@@ -12,7 +12,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy source code (cache bust: v2)
 COPY . .
 
 # Build the app

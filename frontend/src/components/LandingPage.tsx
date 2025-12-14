@@ -1,6 +1,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
 import {
   Layers,
   Zap,
@@ -13,6 +14,7 @@ import {
   Brain,
   Target,
   ChevronDown,
+  Loader2,
 } from 'lucide-react';
 
 // Animated gradient orb background
@@ -399,6 +401,12 @@ function PricingCard({
 
 export function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { register } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
@@ -406,6 +414,48 @@ export function LandingPage() {
 
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+
+  const handleEmailSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      // Generate a random password that meets requirements
+      const randomPart = Math.random().toString(36).substring(2, 10);
+      const randomPassword = `${randomPart}Abc123!@`;
+
+      // Use email prefix as name
+      const name = trimmedEmail.split('@')[0].charAt(0).toUpperCase() + trimmedEmail.split('@')[0].slice(1);
+
+      await register(name, trimmedEmail, randomPassword);
+
+      // Redirect to dashboard with onboarding param
+      navigate('/dashboard?onboarding=start');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      const errorMessage = error?.message || 'Registration failed. Please try again.';
+
+      // Check if user already exists
+      if (
+        errorMessage.toLowerCase().includes('already') ||
+        errorMessage.toLowerCase().includes('exists')
+      ) {
+        setError('An account with this email already exists. Redirecting to sign in...');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(errorMessage);
+      }
+      setIsSubmitting(false);
+    }
+  };
 
   const features = [
     {
@@ -561,26 +611,64 @@ export function LandingPage() {
             You only see what truly needs your attention.
           </motion.p>
 
-          {/* CTA buttons */}
+          {/* Email signup form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="max-w-lg mx-auto mb-8"
           >
-            <Link
-              to="/register"
-              className="group flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-semibold text-lg hover:opacity-90 transition-all"
-            >
-              Start Free Trial
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <a
-              href="#how-it-works"
-              className="flex items-center gap-2 px-8 py-4 rounded-xl bg-surface-card/50 border border-surface-border text-text-primary font-semibold text-lg hover:bg-surface-hover hover:border-accent-cyan/30 transition-all backdrop-blur-sm"
-            >
-              See How It Works
-            </a>
+            <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                disabled={isSubmitting}
+                className="flex-1 px-5 py-4 text-base rounded-xl bg-surface-card/80 border border-surface-border text-text-primary placeholder-text-muted focus:border-accent-cyan focus:ring-2 focus:ring-accent-cyan/20 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="group flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-semibold text-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    Get started
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+            {error && (
+              <p className="text-critical mt-3 text-sm text-center">{error}</p>
+            )}
+            <p className="text-text-muted mt-4 text-sm text-center">
+              No credit card required • 14-day free trial
+            </p>
+
+            {/* Secondary CTA */}
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <a
+                href="#how-it-works"
+                className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+              >
+                See how it works
+              </a>
+              <span className="text-text-muted">•</span>
+              <Link
+                to="/login"
+                className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Already have an account?
+              </Link>
+            </div>
           </motion.div>
 
           {/* Scroll indicator */}
@@ -704,13 +792,42 @@ export function LandingPage() {
             Join thousands of professionals who've put their inbox on autopilot.
             Start your free trial today.
           </p>
-          <Link
-            to="/register"
-            className="group inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-bold text-xl hover:opacity-90 transition-all"
-          >
-            Get Started Free
-            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-          </Link>
+
+          {/* Email signup form */}
+          <div className="max-w-lg mx-auto">
+            <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                disabled={isSubmitting}
+                className="flex-1 px-5 py-4 text-base rounded-xl bg-surface-card/80 border border-surface-border text-text-primary placeholder-text-muted focus:border-accent-cyan focus:ring-2 focus:ring-accent-cyan/20 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="group flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-semibold text-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    Get started
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            </form>
+            {error && (
+              <p className="text-critical mt-3 text-sm">{error}</p>
+            )}
+          </div>
+
           <p className="mt-6 text-text-muted text-sm">
             No credit card required. 14-day free trial.
           </p>
