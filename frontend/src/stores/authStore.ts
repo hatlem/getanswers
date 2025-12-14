@@ -2,12 +2,25 @@ import { create } from 'zustand';
 import type { User } from '../types';
 import { tokenManager } from '../lib/api';
 
+interface SMTPCredentials {
+  email: string;
+  password: string;
+  imap_server: string;
+  imap_port: number;
+  smtp_server: string;
+  smtp_port: number;
+  use_ssl: boolean;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   gmailConnected: boolean;
+  outlookConnected: boolean;
+  smtpConnected: boolean;
+  emailProvider: string | null;
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
@@ -18,8 +31,14 @@ interface AuthState {
   connectGmail: () => void;
   disconnectGmail: () => void;
   handleGmailCallback: (code: string) => Promise<void>;
+  connectOutlook: () => void;
+  disconnectOutlook: () => Promise<void>;
+  handleOutlookCallback: (code: string, state: string) => Promise<void>;
+  connectSMTP: (credentials: SMTPCredentials) => Promise<void>;
+  disconnectSMTP: () => Promise<void>;
   clearError: () => void;
   checkAuth: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (
@@ -34,6 +53,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
   gmailConnected: false,
+  outlookConnected: false,
+  smtpConnected: false,
+  emailProvider: null,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -81,7 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Registration failed');
+            throw new Error(error.detail || error.message || 'Registration failed');
           }
 
           const { user, access_token } = await response.json();
@@ -212,13 +234,114 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             throw new Error(error.message || 'Gmail connection failed');
           }
 
-          set({ gmailConnected: true, isLoading: false });
+          set({ gmailConnected: true, emailProvider: 'gmail', isLoading: false });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Gmail connection failed',
             isLoading: false
           });
           throw error;
+        }
+      },
+
+      connectOutlook: () => {
+        // Get auth URL from backend and redirect
+        const token = tokenManager.get();
+        const redirectUri = encodeURIComponent(`${window.location.origin}/auth/outlook/callback`);
+        window.location.href = `${API_BASE}/api/auth/outlook?redirect_uri=${redirectUri}`;
+      },
+
+      disconnectOutlook: async (): Promise<void> => {
+        try {
+          const token = tokenManager.get();
+          const response = await fetch(`${API_BASE}/api/auth/outlook`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            set({ outlookConnected: false, emailProvider: null });
+          }
+        } catch (error) {
+          console.error('Failed to disconnect Outlook:', error);
+        }
+      },
+
+      handleOutlookCallback: async (code: string, state: string): Promise<void> => {
+        set({ isLoading: true, error: null });
+        try {
+          const redirectUri = encodeURIComponent(`${window.location.origin}/auth/outlook/callback`);
+          const response = await fetch(
+            `${API_BASE}/api/auth/outlook/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}&redirect_uri=${redirectUri}`,
+            {
+              method: 'GET',
+              credentials: 'include',
+            }
+          );
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Outlook connection failed');
+          }
+
+          set({ outlookConnected: true, emailProvider: 'outlook', isLoading: false });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Outlook connection failed',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+
+      connectSMTP: async (credentials: SMTPCredentials): Promise<void> => {
+        set({ isLoading: true, error: null });
+        try {
+          const token = tokenManager.get();
+          const response = await fetch(`${API_BASE}/api/auth/smtp`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(credentials),
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'SMTP connection failed');
+          }
+
+          set({ smtpConnected: true, emailProvider: 'smtp', isLoading: false });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'SMTP connection failed',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+
+      disconnectSMTP: async (): Promise<void> => {
+        try {
+          const token = tokenManager.get();
+          const response = await fetch(`${API_BASE}/api/auth/smtp`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            set({ smtpConnected: false, emailProvider: null });
+          }
+        } catch (error) {
+          console.error('Failed to disconnect SMTP:', error);
         }
       },
 
@@ -232,6 +355,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         isAuthenticated: false,
         gmailConnected: false,
+        outlookConnected: false,
+        smtpConnected: false,
+        emailProvider: null,
         isLoading: false
       });
       return;
@@ -246,11 +372,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       if (response.ok) {
-        const { user, gmailConnected } = await response.json();
+        const { user, gmailConnected, outlookConnected, smtpConnected, emailProvider } = await response.json();
         set({
           user,
           isAuthenticated: true,
           gmailConnected: gmailConnected || false,
+          outlookConnected: outlookConnected || false,
+          smtpConnected: smtpConnected || false,
+          emailProvider: emailProvider || null,
           isLoading: false
         });
       } else {
@@ -259,6 +388,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user: null,
           isAuthenticated: false,
           gmailConnected: false,
+          outlookConnected: false,
+          smtpConnected: false,
+          emailProvider: null,
           isLoading: false
         });
       }
@@ -267,8 +399,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         isAuthenticated: false,
         gmailConnected: false,
+        outlookConnected: false,
+        smtpConnected: false,
+        emailProvider: null,
         isLoading: false
       });
+    }
+  },
+
+  completeOnboarding: async (): Promise<void> => {
+    try {
+      const token = tokenManager.get();
+      const response = await fetch(`${API_BASE}/api/auth/onboarding/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ completed: true }),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Update local user state to reflect onboarding completion
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: { ...currentUser, onboarding_completed: true }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to complete onboarding:', error);
     }
   },
 }));

@@ -97,6 +97,7 @@ export interface User {
   name: string;
   avatarUrl?: string;
   autonomyLevel: 'low' | 'medium' | 'high';
+  onboarding_completed: boolean;
   createdAt: string;
 }
 

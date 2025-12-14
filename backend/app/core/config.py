@@ -40,6 +40,20 @@ class Settings(BaseSettings):
         description="Google OAuth Client Secret for Gmail integration"
     )
 
+    # OAuth Configuration (Microsoft/Outlook) - Optional for initial setup
+    MICROSOFT_CLIENT_ID: Optional[str] = Field(
+        default=None,
+        description="Microsoft OAuth Client ID for Outlook integration"
+    )
+    MICROSOFT_CLIENT_SECRET: Optional[str] = Field(
+        default=None,
+        description="Microsoft OAuth Client Secret for Outlook integration"
+    )
+    MICROSOFT_TENANT_ID: Optional[str] = Field(
+        default="common",
+        description="Microsoft tenant ID (common for multi-tenant apps)"
+    )
+
     # Anthropic Configuration - Optional for initial setup
     ANTHROPIC_API_KEY: Optional[str] = Field(
         default=None,

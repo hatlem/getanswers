@@ -63,7 +63,9 @@
       "Bash(railway service:*)",
       "mcp__railway__deploy-template",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "mcp__railway__link-service",
+      "mcp__railway__generate-domain"
     ]
   }
 }

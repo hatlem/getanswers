@@ -16,6 +16,13 @@ from .gmail import (
     GmailAPIError,
     GmailRateLimitError,
 )
+from .outlook import (
+    OutlookService,
+    OutlookServiceError,
+    OutlookAuthError,
+    OutlookAPIError,
+    get_outlook_service,
+)
 from .email import (
     EmailService,
     email_service,
@@ -57,6 +64,12 @@ __all__ = [
     "GmailAuthError",
     "GmailAPIError",
     "GmailRateLimitError",
+    # Outlook service and exceptions
+    "OutlookService",
+    "OutlookServiceError",
+    "OutlookAuthError",
+    "OutlookAPIError",
+    "get_outlook_service",
     # Email service (transactional emails via GetMailer)
     "EmailService",
     "email_service",

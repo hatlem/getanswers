@@ -10,13 +10,13 @@ import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
 import { GmailCallbackPage } from './components/auth/GmailCallbackPage';
+import { OutlookCallbackPage } from './components/auth/OutlookCallbackPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EditModal } from './components/modals/EditModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
-import { useAuth } from './hooks/useAuth';
 import { useAuthStore } from './stores/authStore';
 import { useStats } from './hooks/useStats';
 import { useQueueActions } from './hooks/useQueue';
@@ -36,21 +36,18 @@ function Dashboard() {
   } = useAppStore();
 
   // Onboarding state - show for new users who haven't completed it
-  const ONBOARDING_KEY = 'getanswers_onboarding_complete';
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { connectGmail, gmailConnected } = useAuthStore();
+  const { user, connectGmail, connectOutlook, connectSMTP, completeOnboarding } = useAuthStore();
 
-  // Show onboarding if: URL param says start OR user hasn't completed onboarding yet
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
-    const hasCompletedOnboarding = localStorage.getItem(ONBOARDING_KEY) === 'true';
-    const urlTriggered = searchParams.get('onboarding') === 'start';
-    return urlTriggered || !hasCompletedOnboarding;
-  });
+  // Show onboarding if: URL param says start OR user hasn't completed onboarding yet (from database)
+  const urlTriggered = searchParams.get('onboarding') === 'start';
+  const hasCompletedOnboarding = user?.onboarding_completed ?? false;
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(urlTriggered || !hasCompletedOnboarding);
 
-  const handleCloseOnboarding = () => {
-    // Mark onboarding as complete
-    localStorage.setItem(ONBOARDING_KEY, 'true');
+  const handleCloseOnboarding = async () => {
+    // Mark onboarding as complete in the database
+    await completeOnboarding();
     setIsOnboardingOpen(false);
     navigate('/dashboard', { replace: true });
   };
@@ -59,12 +56,25 @@ function Dashboard() {
     connectGmail();
   };
 
+  const handleConnectOutlook = () => {
+    connectOutlook();
+  };
+
+  const handleConnectSMTP = async (credentials: {
+    email: string;
+    password: string;
+    imap_server: string;
+    imap_port: number;
+    smtp_server: string;
+    smtp_port: number;
+    use_ssl: boolean;
+  }) => {
+    await connectSMTP(credentials);
+  };
+
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<ActionCard | null>(null);
-
-  // Fetch user data
-  const { user } = useAuth();
 
   // Fetch data using React Query hooks
   const { data: stats, isLoading: statsLoading } = useStats();
@@ -192,6 +202,8 @@ function Dashboard() {
         isOpen={isOnboardingOpen}
         onClose={handleCloseOnboarding}
         onConnectGmail={handleConnectGmail}
+        onConnectOutlook={handleConnectOutlook}
+        onConnectSMTP={handleConnectSMTP}
       />
     </div>
   );
@@ -208,6 +220,7 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/verify" element={<MagicLinkPage />} />
         <Route path="/auth/gmail/callback" element={<GmailCallbackPage />} />
+        <Route path="/auth/outlook/callback" element={<OutlookCallbackPage />} />
 
         {/* Protected routes */}
         <Route

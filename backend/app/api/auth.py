@@ -155,6 +155,7 @@ class UserResponse(BaseModel):
     name: str
     is_super_admin: bool = False
     current_organization: Optional[OrganizationInfo] = None
+    onboarding_completed: bool = False
     created_at: datetime
 
     class Config:
@@ -271,6 +272,7 @@ async def register(
             name=new_user.name,
             is_super_admin=new_user.is_super_admin,
             current_organization=current_org,
+            onboarding_completed=new_user.onboarding_completed,
             created_at=new_user.created_at
         ),
         access_token=access_token
@@ -348,6 +350,7 @@ async def login(
                 name=user.name,
                 is_super_admin=user.is_super_admin,
                 current_organization=current_org,
+                onboarding_completed=user.onboarding_completed,
                 created_at=user.created_at
             ),
             access_token=access_token
@@ -568,6 +571,7 @@ async def verify_magic_link(
                 name=user.name,
                 is_super_admin=user.is_super_admin,
                 current_organization=current_org,
+                onboarding_completed=user.onboarding_completed,
                 created_at=user.created_at
             ),
             access_token=access_token
@@ -579,7 +583,16 @@ async def verify_magic_link(
         raise DatabaseError("Failed to verify magic link")
 
 
-@router.get("/me", response_model=UserResponse)
+class UserMeResponse(BaseModel):
+    """Extended user response with email connection status."""
+    user: UserResponse
+    gmailConnected: bool = False
+    outlookConnected: bool = False
+    smtpConnected: bool = False
+    emailProvider: Optional[str] = None
+
+
+@router.get("/me", response_model=UserMeResponse)
 async def get_current_user_info(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -601,13 +614,26 @@ async def get_current_user_info(
                 is_personal=org.is_personal
             )
 
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        name=current_user.name,
-        is_super_admin=current_user.is_super_admin,
-        current_organization=current_org,
-        created_at=current_user.created_at
+    # Check email connections
+    gmail_connected = bool(current_user.gmail_credentials)
+    outlook_connected = bool(current_user.outlook_credentials)
+    smtp_connected = bool(current_user.smtp_credentials)
+    email_provider = current_user.email_provider
+
+    return UserMeResponse(
+        user=UserResponse(
+            id=current_user.id,
+            email=current_user.email,
+            name=current_user.name,
+            is_super_admin=current_user.is_super_admin,
+            current_organization=current_org,
+            onboarding_completed=current_user.onboarding_completed,
+            created_at=current_user.created_at
+        ),
+        gmailConnected=gmail_connected,
+        outlookConnected=outlook_connected,
+        smtpConnected=smtp_connected,
+        emailProvider=email_provider
     )
 
 
@@ -645,10 +671,29 @@ async def refresh_token(
             name=current_user.name,
             is_super_admin=current_user.is_super_admin,
             current_organization=current_org,
+            onboarding_completed=current_user.onboarding_completed,
             created_at=current_user.created_at
         ),
         access_token=access_token
     )
+
+
+class OnboardingCompleteRequest(BaseModel):
+    """Request to mark onboarding as complete."""
+    completed: bool = True
+
+
+@router.post("/onboarding/complete", response_model=MessageResponse)
+async def complete_onboarding(
+    request: OnboardingCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Mark the user's onboarding as complete."""
+    current_user.onboarding_completed = request.completed
+    await db.commit()
+    logger.info(f"User {current_user.email} onboarding marked as {'complete' if request.completed else 'incomplete'}")
+    return MessageResponse(message="Onboarding status updated")
 
 
 @router.post("/logout", response_model=MessageResponse)

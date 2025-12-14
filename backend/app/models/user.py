@@ -54,8 +54,16 @@ class User(Base):
         nullable=False
     )
 
-    # Gmail OAuth credentials (encrypted)
+    # Email OAuth credentials (encrypted JSON)
     gmail_credentials: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    outlook_credentials: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    smtp_credentials: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Active email provider: 'gmail', 'outlook', 'smtp', or None
+    email_provider: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+    # Onboarding status
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
