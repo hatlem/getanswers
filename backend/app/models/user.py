@@ -1,14 +1,17 @@
 """User model for authentication and user management."""
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, Index
+from sqlalchemy import String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSON
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .organization import Organization, OrganizationMember
 
 
 class AutonomyLevel(str, Enum):
@@ -33,6 +36,16 @@ class User(Base):
     # Profile
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+
+    # Super admin flag (platform-wide admin)
+    is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Current active organization context
+    current_organization_id: Mapped[Optional[UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="SET NULL"),
+        nullable=True
+    )
 
     # Preferences
     autonomy_level: Mapped[AutonomyLevel] = mapped_column(
@@ -80,5 +93,22 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    # Organization relationships
+    current_organization: Mapped[Optional["Organization"]] = relationship(
+        "Organization",
+        foreign_keys=[current_organization_id]
+    )
+    organization_memberships: Mapped[list["OrganizationMember"]] = relationship(
+        "OrganizationMember",
+        back_populates="user",
+        foreign_keys="OrganizationMember.user_id",
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, name={self.name})>"
+
+    @property
+    def is_platform_admin(self) -> bool:
+        """Check if user is a platform super admin."""
+        return self.is_super_admin

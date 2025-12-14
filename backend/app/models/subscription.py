@@ -1,7 +1,7 @@
 """Subscription and billing models."""
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import String, ForeignKey, DateTime, Boolean, Integer
@@ -9,6 +9,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .organization import Organization
 
 
 class SubscriptionStatus(str, Enum):
@@ -31,19 +34,26 @@ class PlanTier(str, Enum):
 
 
 class Subscription(Base):
-    """User subscription model."""
+    """User or Organization subscription model."""
 
     __tablename__ = "subscriptions"
 
     # Primary key
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
-    # User relationship
-    user_id: Mapped[UUID] = mapped_column(
+    # User relationship (for personal subscriptions)
+    user_id: Mapped[Optional[UUID]] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        unique=True,
+        nullable=True,
+        index=True
+    )
+
+    # Organization relationship (for team subscriptions)
+    organization_id: Mapped[Optional[UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,
         index=True
     )
 
@@ -89,6 +99,11 @@ class Subscription(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="subscription")
+    organization: Mapped[Optional["Organization"]] = relationship(
+        "Organization",
+        back_populates="subscription",
+        foreign_keys=[organization_id]
+    )
 
     def __repr__(self) -> str:
         return f"<Subscription(id={self.id}, user_id={self.user_id}, plan={self.plan}, status={self.status})>"

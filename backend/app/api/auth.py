@@ -30,9 +30,50 @@ from app.core.exceptions import (
 from app.core.logging import logger
 from app.core.audit import AuditLog
 from app.core.utils import get_client_ip
-from app.models import User, MagicLink
+from app.models import User, MagicLink, Organization, OrganizationMember, OrganizationRole
 from app.api.deps import get_current_user
 from app.services.email import email_service
+
+
+def generate_unique_slug(name: str) -> str:
+    """Generate a unique slug from a name."""
+    import re
+    import secrets
+    # Convert to lowercase, replace spaces with hyphens, remove non-alphanumeric
+    slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+    # Add random suffix for uniqueness
+    slug = f"{slug}-{secrets.token_hex(4)}"
+    return slug[:100]  # Max 100 chars
+
+
+async def create_personal_organization(
+    db: AsyncSession,
+    user: User
+) -> Organization:
+    """Create a personal organization for a user."""
+    org = Organization(
+        name=f"{user.name}'s Workspace",
+        slug=generate_unique_slug(user.email.split('@')[0]),
+        is_personal=True,
+        is_active=True
+    )
+    db.add(org)
+    await db.flush()
+
+    # Add user as owner
+    member = OrganizationMember(
+        organization_id=org.id,
+        user_id=user.id,
+        role=OrganizationRole.OWNER,
+        is_active=True,
+        accepted_at=datetime.utcnow()
+    )
+    db.add(member)
+
+    # Set as user's current organization
+    user.current_organization_id = org.id
+
+    return org
 
 router = APIRouter()
 
@@ -101,10 +142,19 @@ class VerifyMagicLinkRequest(BaseModel):
     token: str = Field(..., description="Magic link token from email")
 
 
+class OrganizationInfo(BaseModel):
+    id: UUID
+    name: str
+    slug: str
+    is_personal: bool
+
+
 class UserResponse(BaseModel):
     id: UUID
     email: str
     name: str
+    is_super_admin: bool = False
+    current_organization: Optional[OrganizationInfo] = None
     created_at: datetime
 
     class Config:
@@ -163,6 +213,11 @@ async def register(
         )
 
         db.add(new_user)
+        await db.flush()  # Get user ID before creating org
+
+        # Create personal organization for the user
+        await create_personal_organization(db, new_user)
+
         await db.commit()
         await db.refresh(new_user)
 
@@ -173,6 +228,7 @@ async def register(
             success=True,
             user_id=str(new_user.id),
         )
+        logger.info(f"Created user {email} with personal organization")
     except ConflictError:
         raise
     except Exception as e:
@@ -300,9 +356,15 @@ async def request_magic_link(
             password_hash=None
         )
         db.add(user)
+        await db.flush()  # Get user ID before creating org
+
+        # Create personal organization for the user
+        await create_personal_organization(db, user)
+
         await db.commit()
         await db.refresh(user)
         is_new_user = True
+        logger.info(f"Created user {email} with personal organization via magic link")
 
     # Generate magic link token
     token = generate_magic_link_token()
@@ -453,10 +515,34 @@ async def verify_magic_link(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get the current authenticated user's information."""
-    return UserResponse.model_validate(current_user)
+    # Load current organization if set
+    current_org = None
+    if current_user.current_organization_id:
+        from sqlalchemy.orm import selectinload
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == current_user.current_organization_id)
+        )
+        org = org_result.scalar_one_or_none()
+        if org:
+            current_org = OrganizationInfo(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                is_personal=org.is_personal
+            )
+
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        is_super_admin=current_user.is_super_admin,
+        current_organization=current_org,
+        created_at=current_user.created_at
+    )
 
 
 @router.post("/refresh", response_model=AuthResponse)
