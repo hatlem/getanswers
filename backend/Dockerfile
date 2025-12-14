@@ -29,4 +29,4 @@ ENV RUN_WORKER=false
 # Set RUN_WORKER=true to run as Celery worker
 # Set RUN_BEAT=true to run as Celery beat scheduler
 # Migrations run before starting the API server
-CMD ["sh", "-c", "if [ \"$RUN_WORKER\" = 'true' ]; then celery -A app.workers.celery:celery_app worker --loglevel=info; elif [ \"$RUN_BEAT\" = 'true' ]; then celery -A app.workers.celery:celery_app beat --loglevel=info; else echo '=== Migration files ===' && ls -la alembic/versions/*.py && alembic upgrade head || alembic stamp head; uvicorn app.main:app --host 0.0.0.0 --port 8000; fi"]
+CMD ["sh", "-c", "if [ \"$RUN_WORKER\" = 'true' ]; then celery -A app.workers.celery:celery_app worker --loglevel=info; elif [ \"$RUN_BEAT\" = 'true' ]; then celery -A app.workers.celery:celery_app beat --loglevel=info; else alembic upgrade head || true; uvicorn app.main:app --host 0.0.0.0 --port 8000; fi"]
