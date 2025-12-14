@@ -428,9 +428,9 @@ export function LandingPage() {
     setError('');
 
     try {
-      // Generate a random password that meets requirements
-      const randomPart = Math.random().toString(36).substring(2, 10);
-      const randomPassword = `${randomPart}Abc123!@`;
+      // Generate a random password that meets requirements (no special chars to avoid escaping issues)
+      const randomPart = Math.random().toString(36).substring(2, 12);
+      const randomPassword = `${randomPart}Aa1Bb2Cc3`;
 
       // Use email prefix as name
       const name = trimmedEmail.split('@')[0].charAt(0).toUpperCase() + trimmedEmail.split('@')[0].slice(1);

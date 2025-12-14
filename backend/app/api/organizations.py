@@ -1,7 +1,7 @@
 """Organization management API endpoints."""
 import secrets
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -23,6 +23,11 @@ from app.models import (
 )
 
 router = APIRouter()
+
+
+def get_role_value(role: Union[OrganizationRole, str]) -> str:
+    """Extract the string value from a role (handles both enum and string)."""
+    return role.value if hasattr(role, 'value') else role
 
 
 # =============================================================================
@@ -130,7 +135,7 @@ async def list_my_organizations(
             name=m.organization.name,
             slug=m.organization.slug,
             is_personal=m.organization.is_personal,
-            my_role=m.role.value
+            my_role=get_role_value(m.role)
         )
         for m in memberships
     ]
@@ -162,7 +167,7 @@ async def get_current_org(
         is_personal=organization.is_personal,
         is_active=organization.is_active,
         member_count=member_count,
-        my_role=member.role.value,
+        my_role=get_role_value(member.role),
         created_at=organization.created_at
     )
 
@@ -262,7 +267,7 @@ async def update_current_organization(
         is_personal=organization.is_personal,
         is_active=organization.is_active,
         member_count=member_count,
-        my_role=member.role.value,
+        my_role=get_role_value(member.role),
         created_at=organization.created_at
     )
 
@@ -323,7 +328,7 @@ async def list_members(
             user_id=m.user_id,
             email=m.user.email,
             name=m.user.name,
-            role=m.role.value,
+            role=get_role_value(m.role),
             is_active=m.is_active,
             joined_at=m.accepted_at or m.created_at
         )
@@ -384,7 +389,7 @@ async def update_member_role(
         user_id=member.user_id,
         email=member.user.email,
         name=member.user.name,
-        role=member.role.value,
+        role=get_role_value(member.role),
         is_active=member.is_active,
         joined_at=member.accepted_at or member.created_at
     )
@@ -461,7 +466,7 @@ async def list_invites(
         InviteResponse(
             id=i.id,
             email=i.email,
-            role=i.role.value,
+            role=get_role_value(i.role),
             expires_at=i.expires_at,
             created_at=i.created_at
         )
@@ -530,7 +535,7 @@ async def create_invite(
     return InviteResponse(
         id=invite.id,
         email=invite.email,
-        role=invite.role.value,
+        role=get_role_value(invite.role),
         expires_at=invite.expires_at,
         created_at=invite.created_at
     )

@@ -62,7 +62,8 @@
       "mcp__railway__list-deployments",
       "Bash(railway service:*)",
       "mcp__railway__deploy-template",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

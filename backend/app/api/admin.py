@@ -1,6 +1,6 @@
 """Admin API endpoints for platform management (super admin only)."""
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -19,6 +19,11 @@ from app.models import (
 )
 
 router = APIRouter()
+
+
+def get_role_value(role: Union[OrganizationRole, str]) -> str:
+    """Extract the string value from a role (handles both enum and string)."""
+    return role.value if hasattr(role, 'value') else role
 
 
 # =============================================================================
@@ -377,7 +382,7 @@ async def get_organization(
             user_id=m.user_id,
             user_email=m.user.email,
             user_name=m.user.name,
-            role=m.role.value,
+            role=get_role_value(m.role),
             is_active=m.is_active,
             created_at=m.created_at
         )
@@ -588,7 +593,7 @@ async def add_member(
         user_id=member.user_id,
         user_email=user.email,
         user_name=user.name,
-        role=member.role.value,
+        role=get_role_value(member.role),
         is_active=member.is_active,
         created_at=member.created_at
     )
@@ -631,7 +636,7 @@ async def update_member(
         user_id=member.user_id,
         user_email=member.user.email,
         user_name=member.user.name,
-        role=member.role.value,
+        role=get_role_value(member.role),
         is_active=member.is_active,
         created_at=member.created_at
     )
