@@ -33,6 +33,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
+    # OAuth provider IDs
+    google_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+
     # Profile
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)

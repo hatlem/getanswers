@@ -2,10 +2,13 @@ from datetime import datetime, timedelta
 from uuid import UUID
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import redis.asyncio as redis
+import secrets
+import httpx
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -734,3 +737,237 @@ async def set_password(
 async def logout():
     """Logout the current user (client-side token deletion)."""
     return MessageResponse(message="Logged out successfully")
+
+
+# =============================================================================
+# Google OAuth Login
+# =============================================================================
+
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+# Store OAuth state tokens temporarily (in production, use Redis)
+_oauth_states: dict[str, datetime] = {}
+
+
+def cleanup_expired_states():
+    """Remove expired OAuth state tokens."""
+    now = datetime.utcnow()
+    expired = [k for k, v in _oauth_states.items() if (now - v).total_seconds() > 600]
+    for k in expired:
+        del _oauth_states[k]
+
+
+class GoogleAuthUrlResponse(BaseModel):
+    url: str
+
+
+@router.get("/google", response_model=GoogleAuthUrlResponse)
+async def get_google_auth_url(
+    redirect_uri: Optional[str] = Query(None, description="Custom redirect URI")
+):
+    """
+    Get the Google OAuth authorization URL.
+
+    The frontend should redirect the user to this URL to start the OAuth flow.
+    """
+    if not settings.GMAIL_CLIENT_ID:
+        raise ValidationError("Google OAuth is not configured")
+
+    # Clean up expired states
+    cleanup_expired_states()
+
+    # Generate state token for CSRF protection
+    state = secrets.token_urlsafe(32)
+    _oauth_states[state] = datetime.utcnow()
+
+    # Build redirect URI - use custom if provided, otherwise default
+    callback_uri = redirect_uri or f"{settings.APP_URL}/auth/google/callback"
+
+    # Build authorization URL
+    params = {
+        "client_id": settings.GMAIL_CLIENT_ID,
+        "redirect_uri": callback_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "access_type": "online",
+        "prompt": "select_account",
+    }
+
+    query_string = "&".join(f"{k}={v}" for k, v in params.items())
+    auth_url = f"{GOOGLE_AUTH_URL}?{query_string}"
+
+    return GoogleAuthUrlResponse(url=auth_url)
+
+
+class GoogleCallbackRequest(BaseModel):
+    code: str = Field(..., description="Authorization code from Google")
+    state: str = Field(..., description="State token for CSRF verification")
+    redirect_uri: Optional[str] = Field(None, description="Redirect URI used in authorization")
+
+
+@router.post("/google/callback", response_model=AuthResponse)
+async def google_callback(
+    req: Request,
+    request: GoogleCallbackRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Handle Google OAuth callback.
+
+    Exchange the authorization code for tokens and create/login the user.
+    """
+    client_ip = get_client_ip(req)
+
+    if not settings.GMAIL_CLIENT_ID or not settings.GMAIL_CLIENT_SECRET:
+        raise ValidationError("Google OAuth is not configured")
+
+    # Verify state token
+    if request.state not in _oauth_states:
+        logger.warning(f"Invalid OAuth state token from {client_ip}")
+        raise ValidationError("Invalid or expired state token")
+
+    # Check if state is expired (10 minute window)
+    state_created = _oauth_states.pop(request.state)
+    if (datetime.utcnow() - state_created).total_seconds() > 600:
+        logger.warning(f"Expired OAuth state token from {client_ip}")
+        raise ValidationError("State token has expired")
+
+    # Build redirect URI
+    callback_uri = request.redirect_uri or f"{settings.APP_URL}/auth/google/callback"
+
+    # Exchange code for tokens
+    async with httpx.AsyncClient() as client:
+        try:
+            token_response = await client.post(
+                GOOGLE_TOKEN_URL,
+                data={
+                    "client_id": settings.GMAIL_CLIENT_ID,
+                    "client_secret": settings.GMAIL_CLIENT_SECRET,
+                    "code": request.code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": callback_uri,
+                }
+            )
+
+            if token_response.status_code != 200:
+                logger.error(f"Google token exchange failed: {token_response.text}")
+                raise AuthenticationError("Failed to authenticate with Google")
+
+            token_data = token_response.json()
+            access_token_google = token_data.get("access_token")
+
+            if not access_token_google:
+                raise AuthenticationError("No access token received from Google")
+
+            # Get user info from Google
+            userinfo_response = await client.get(
+                GOOGLE_USERINFO_URL,
+                headers={"Authorization": f"Bearer {access_token_google}"}
+            )
+
+            if userinfo_response.status_code != 200:
+                logger.error(f"Failed to get Google user info: {userinfo_response.text}")
+                raise AuthenticationError("Failed to get user information from Google")
+
+            userinfo = userinfo_response.json()
+
+        except httpx.RequestError as e:
+            logger.error(f"HTTP error during Google OAuth: {e}")
+            raise AuthenticationError("Failed to communicate with Google")
+
+    # Extract user info
+    google_email = userinfo.get("email")
+    google_name = userinfo.get("name") or userinfo.get("given_name") or google_email.split("@")[0]
+    google_id = userinfo.get("id")
+
+    if not google_email:
+        raise AuthenticationError("No email received from Google")
+
+    email = sanitize_email(google_email)
+
+    # Find or create user
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    is_new_user = False
+    if not user:
+        # Create new user
+        user = User(
+            email=email,
+            name=google_name,
+            password_hash=None,  # No password for OAuth users
+            google_id=google_id,
+        )
+        db.add(user)
+        await db.flush()
+
+        # Create personal organization
+        await create_personal_organization(db, user)
+
+        await db.commit()
+        await db.refresh(user)
+        is_new_user = True
+        logger.info(f"Created user {email} via Google OAuth with personal organization")
+
+        # Log registration
+        await AuditLog.log_registration(
+            email=email,
+            ip_address=client_ip,
+            success=True,
+            user_id=str(user.id),
+        )
+
+        # Send welcome email (non-blocking)
+        try:
+            await email_service.send_welcome_email(user.email, user.name)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
+    else:
+        # Update google_id if not set
+        if not user.google_id and google_id:
+            user.google_id = google_id
+            await db.commit()
+
+    # Create access token
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    # Log successful login
+    await AuditLog.log_login_attempt(
+        email=email,
+        success=True,
+        ip_address=client_ip,
+        user_id=str(user.id),
+    )
+
+    # Build response
+    current_org = None
+    if user.current_organization_id:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == user.current_organization_id)
+        )
+        org = org_result.scalar_one_or_none()
+        if org:
+            current_org = OrganizationInfo(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                is_personal=org.is_personal
+            )
+
+    logger.info(f"User {user.email} {'registered' if is_new_user else 'logged in'} via Google OAuth")
+    return AuthResponse(
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            is_super_admin=user.is_super_admin,
+            current_organization=current_org,
+            onboarding_completed=user.onboarding_completed,
+            needs_password_setup=False,  # OAuth users don't need password
+            created_at=user.created_at
+        ),
+        access_token=access_token
+    )

@@ -11,6 +11,7 @@ import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
 import { GmailCallbackPage } from './components/auth/GmailCallbackPage';
 import { OutlookCallbackPage } from './components/auth/OutlookCallbackPage';
+import { GoogleAuthCallbackPage } from './components/auth/GoogleAuthCallbackPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EditModal } from './components/modals/EditModal';
 import { OnboardingModal } from './components/OnboardingModal';
@@ -238,6 +239,7 @@ function AppContent() {
         <Route path="/auth/verify" element={<MagicLinkPage />} />
         <Route path="/auth/gmail/callback" element={<GmailCallbackPage />} />
         <Route path="/auth/outlook/callback" element={<OutlookCallbackPage />} />
+        <Route path="/auth/google/callback" element={<GoogleAuthCallbackPage />} />
 
         {/* Protected routes */}
         <Route

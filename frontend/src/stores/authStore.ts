@@ -40,6 +40,8 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   setPassword: (password: string) => Promise<void>;
+  setUser: (user: User) => void;
+  setToken: (token: string) => void;
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (
@@ -464,5 +466,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Failed to set password:', error);
       throw error;
     }
+  },
+
+  setUser: (user: User) => {
+    set({
+      user,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+  },
+
+  setToken: (token: string) => {
+    tokenManager.set(token);
   },
 }));
