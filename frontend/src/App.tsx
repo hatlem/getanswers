@@ -5,6 +5,7 @@ import { TopNav } from './components/layout/TopNav';
 import { LeftColumn } from './components/layout/LeftColumn';
 import { CenterColumn } from './components/layout/CenterColumn';
 import { RightColumn } from './components/layout/RightColumn';
+import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
@@ -169,6 +170,7 @@ function AppContent() {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/verify" element={<MagicLinkPage />} />
@@ -176,7 +178,7 @@ function AppContent() {
 
         {/* Protected routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />

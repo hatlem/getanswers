@@ -21,7 +21,11 @@ interface AuthState {
   checkAuth: () => Promise<void>;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://backend-api-production-9c10.up.railway.app'
+    : 'http://localhost:8955'
+);
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

@@ -45,7 +45,7 @@ export function LoginPage() {
         setMagicLinkSent(true);
       } else {
         await login(email, password);
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (err) {
       // Error is handled by the store

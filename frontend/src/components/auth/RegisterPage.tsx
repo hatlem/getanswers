@@ -64,7 +64,7 @@ export function RegisterPage() {
 
     try {
       await register(formData.name, formData.email, formData.password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       // Error is handled by the store
     }
