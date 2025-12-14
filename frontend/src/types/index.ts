@@ -98,6 +98,7 @@ export interface User {
   avatarUrl?: string;
   autonomyLevel: 'low' | 'medium' | 'high';
   onboarding_completed: boolean;
+  needs_password_setup: boolean;
   createdAt: string;
 }
 

@@ -14,6 +14,7 @@ import { OutlookCallbackPage } from './components/auth/OutlookCallbackPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EditModal } from './components/modals/EditModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { PasswordSetupModal } from './components/PasswordSetupModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
@@ -43,13 +44,24 @@ function Dashboard() {
   // Show onboarding if: URL param says start OR user hasn't completed onboarding yet (from database)
   const urlTriggered = searchParams.get('onboarding') === 'start';
   const hasCompletedOnboarding = user?.onboarding_completed ?? false;
+  const needsPasswordSetup = user?.needs_password_setup ?? false;
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(urlTriggered || !hasCompletedOnboarding);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleCloseOnboarding = async () => {
     // Mark onboarding as complete in the database
     await completeOnboarding();
     setIsOnboardingOpen(false);
     navigate('/dashboard', { replace: true });
+
+    // After onboarding, prompt user to set password if needed
+    if (needsPasswordSetup) {
+      setIsPasswordModalOpen(true);
+    }
+  };
+
+  const handlePasswordSetupComplete = () => {
+    setIsPasswordModalOpen(false);
   };
 
   const handleConnectGmail = () => {
@@ -205,6 +217,11 @@ function Dashboard() {
         onConnectOutlook={handleConnectOutlook}
         onConnectSMTP={handleConnectSMTP}
       />
+
+      {/* Password Setup Modal - shown after onboarding for quick signup users */}
+      {isPasswordModalOpen && (
+        <PasswordSetupModal onComplete={handlePasswordSetupComplete} />
+      )}
     </div>
   );
 }

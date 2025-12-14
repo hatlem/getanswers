@@ -65,6 +65,9 @@ class User(Base):
     # Onboarding status
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Password setup needed (for users who registered via quick signup with auto-generated password)
+    needs_password_setup: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(

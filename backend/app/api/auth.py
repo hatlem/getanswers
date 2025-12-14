@@ -127,6 +127,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
     name: str = Field(..., min_length=1, max_length=255)
+    auto_generated_password: bool = Field(default=False, description="If true, user needs to set password after registration")
 
 
 class LoginRequest(BaseModel):
@@ -156,6 +157,7 @@ class UserResponse(BaseModel):
     is_super_admin: bool = False
     current_organization: Optional[OrganizationInfo] = None
     onboarding_completed: bool = False
+    needs_password_setup: bool = False
     created_at: datetime
 
     class Config:
@@ -210,7 +212,8 @@ async def register(
         new_user = User(
             email=email,
             name=request.name,
-            password_hash=hash_password(request.password)
+            password_hash=hash_password(request.password),
+            needs_password_setup=request.auto_generated_password
         )
 
         db.add(new_user)
@@ -273,6 +276,7 @@ async def register(
             is_super_admin=new_user.is_super_admin,
             current_organization=current_org,
             onboarding_completed=new_user.onboarding_completed,
+            needs_password_setup=new_user.needs_password_setup,
             created_at=new_user.created_at
         ),
         access_token=access_token
@@ -351,6 +355,7 @@ async def login(
                 is_super_admin=user.is_super_admin,
                 current_organization=current_org,
                 onboarding_completed=user.onboarding_completed,
+                needs_password_setup=user.needs_password_setup,
                 created_at=user.created_at
             ),
             access_token=access_token
@@ -572,6 +577,7 @@ async def verify_magic_link(
                 is_super_admin=user.is_super_admin,
                 current_organization=current_org,
                 onboarding_completed=user.onboarding_completed,
+                needs_password_setup=user.needs_password_setup,
                 created_at=user.created_at
             ),
             access_token=access_token
@@ -628,6 +634,7 @@ async def get_current_user_info(
             is_super_admin=current_user.is_super_admin,
             current_organization=current_org,
             onboarding_completed=current_user.onboarding_completed,
+            needs_password_setup=current_user.needs_password_setup,
             created_at=current_user.created_at
         ),
         gmailConnected=gmail_connected,
@@ -672,6 +679,7 @@ async def refresh_token(
             is_super_admin=current_user.is_super_admin,
             current_organization=current_org,
             onboarding_completed=current_user.onboarding_completed,
+            needs_password_setup=current_user.needs_password_setup,
             created_at=current_user.created_at
         ),
         access_token=access_token
@@ -694,6 +702,32 @@ async def complete_onboarding(
     await db.commit()
     logger.info(f"User {current_user.email} onboarding marked as {'complete' if request.completed else 'incomplete'}")
     return MessageResponse(message="Onboarding status updated")
+
+
+class SetPasswordRequest(BaseModel):
+    """Request to set a new password."""
+    password: str = Field(..., min_length=8, description="New password must be at least 8 characters")
+
+
+@router.post("/set-password", response_model=MessageResponse)
+async def set_password(
+    request: SetPasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Set password for users who registered with auto-generated password."""
+    # Validate password strength
+    valid, error_message = validate_password_strength(request.password)
+    if not valid:
+        raise ValidationError(error_message)
+
+    # Update user's password and clear the needs_password_setup flag
+    current_user.password_hash = hash_password(request.password)
+    current_user.needs_password_setup = False
+    await db.commit()
+
+    logger.info(f"User {current_user.email} set their password")
+    return MessageResponse(message="Password set successfully")
 
 
 @router.post("/logout", response_model=MessageResponse)

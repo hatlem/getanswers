@@ -435,7 +435,7 @@ export function LandingPage() {
       // Use email prefix as name
       const name = trimmedEmail.split('@')[0].charAt(0).toUpperCase() + trimmedEmail.split('@')[0].slice(1);
 
-      await register(name, trimmedEmail, randomPassword);
+      await register(name, trimmedEmail, randomPassword, true);
 
       // Redirect to dashboard with onboarding param
       navigate('/dashboard?onboarding=start');
