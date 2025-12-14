@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2, Layers, AlertCircle } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
 import { Button } from '../ui/Button';
 
 export function GoogleAuthCallbackPage() {

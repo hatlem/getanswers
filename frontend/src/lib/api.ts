@@ -190,6 +190,9 @@ class HttpClient {
 // Create HTTP client instance
 const httpClient = new HttpClient();
 
+// Export apiClient for direct usage
+export const apiClient = httpClient;
+
 // API Endpoints organized by domain
 export const api = {
   // Authentication endpoints

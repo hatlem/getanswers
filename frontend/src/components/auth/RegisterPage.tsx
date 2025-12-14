@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../../lib/api-client';
+import { apiClient } from '../../lib/api';
 
 export function RegisterPage() {
   const navigate = useNavigate();
