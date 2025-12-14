@@ -1,7 +1,7 @@
 """Add google_id to users table
 
-Revision ID: 005_google_oauth
-Revises: 004_user_orgs
+Revision ID: 008_google_oauth
+Revises: 007_add_needs_password_setup
 Create Date: 2024-12-14
 
 Adds google_id column for Google OAuth authentication.
@@ -12,8 +12,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = '005_google_oauth'
-down_revision: Union[str, None] = '004_user_orgs'
+revision: str = '008_google_oauth'
+down_revision: Union[str, None] = '007_add_needs_password_setup'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
