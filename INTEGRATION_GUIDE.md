@@ -197,7 +197,7 @@ VITE_API_BASE_URL=http://localhost:8000
 
 For production:
 ```env
-VITE_API_BASE_URL=https://api.getanswers.com
+VITE_API_BASE_URL=https://api.getanswers.co
 ```
 
 ## Testing the Integration
