@@ -112,7 +112,7 @@ export function RegisterPage() {
   const strength = passwordStrength();
 
   return (
-    <div className="min-h-screen bg-surface-base flex items-center justify-center p-6">
+    <div className="min-h-screen bg-surface-base flex items-center justify-center p-4 md:p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -120,22 +120,22 @@ export function RegisterPage() {
         className="w-full max-w-md"
       >
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
-            <Layers className="w-7 h-7 text-white" />
+        <div className="flex items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
+            <Layers className="w-6 h-6 md:w-7 md:h-7 text-white" />
           </div>
-          <span className="text-2xl font-bold text-text-primary tracking-tight">
+          <span className="text-xl md:text-2xl font-bold text-text-primary tracking-tight">
             GetAnswers
           </span>
         </div>
 
         {/* Main Card */}
-        <div className="bg-surface-card border border-surface-border rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-text-primary mb-2">
+        <div className="bg-surface-card border border-surface-border rounded-2xl p-6 md:p-8">
+          <div className="text-center mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
               Create Account
             </h1>
-            <p className="text-text-secondary">
+            <p className="text-sm md:text-base text-text-secondary">
               Start managing your emails with AI
             </p>
           </div>
@@ -325,8 +325,8 @@ export function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-text-muted mb-4">
+        <div className="mt-6 md:mt-8 text-center">
+          <p className="text-xs text-text-muted mb-3 md:mb-4">
             Your data is encrypted and secure
           </p>
           <div className="flex items-center justify-center gap-2 text-xs text-text-muted">

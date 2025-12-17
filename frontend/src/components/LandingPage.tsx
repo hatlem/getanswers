@@ -149,12 +149,12 @@ function FeatureCard({
       className="group relative"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-accent-cyan/10 to-accent-purple/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="relative p-8 rounded-2xl border border-surface-border bg-surface-card/50 backdrop-blur-sm hover:border-accent-cyan/30 transition-all duration-300">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-          <Icon className="w-7 h-7 text-accent-cyan" />
+      <div className="relative p-5 md:p-8 rounded-2xl border border-surface-border bg-surface-card/50 backdrop-blur-sm hover:border-accent-cyan/30 transition-all duration-300">
+        <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300">
+          <Icon className="w-6 h-6 md:w-7 md:h-7 text-accent-cyan" />
         </div>
-        <h3 className="text-xl font-bold text-text-primary mb-3">{title}</h3>
-        <p className="text-text-secondary leading-relaxed">{description}</p>
+        <h3 className="text-lg md:text-xl font-bold text-text-primary mb-2 md:mb-3">{title}</h3>
+        <p className="text-sm md:text-base text-text-secondary leading-relaxed">{description}</p>
       </div>
     </motion.div>
   );
@@ -342,6 +342,8 @@ function PricingCard({
   features,
   highlighted = false,
   index,
+  planId,
+  isLoggedIn,
 }: {
   name: string;
   price: string;
@@ -349,52 +351,66 @@ function PricingCard({
   features: string[];
   highlighted?: boolean;
   index: number;
+  planId?: string;
+  isLoggedIn: boolean;
 }) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (isLoggedIn) {
+      // If logged in, go to billing page with plan preselected
+      navigate(`/billing${planId ? `?plan=${planId}` : ''}`);
+    } else {
+      // If not logged in, go to register
+      navigate('/register');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.15 }}
-      className={`relative rounded-2xl p-8 ${
+      className={`relative rounded-2xl p-5 md:p-8 ${
         highlighted
           ? 'bg-gradient-to-br from-accent-cyan/10 via-surface-card to-accent-purple/10 border-2 border-accent-cyan/30'
           : 'bg-surface-card border border-surface-border'
       }`}
     >
       {highlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple text-xs font-bold uppercase tracking-wider text-white">
+        <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 px-3 md:px-4 py-1 rounded-full bg-gradient-to-r from-accent-cyan to-accent-purple text-[10px] md:text-xs font-bold uppercase tracking-wider text-white">
           Most Popular
         </div>
       )}
 
-      <h3 className="text-2xl font-bold text-text-primary mb-2">{name}</h3>
-      <p className="text-text-secondary mb-6">{description}</p>
+      <h3 className="text-xl md:text-2xl font-bold text-text-primary mb-2">{name}</h3>
+      <p className="text-sm md:text-base text-text-secondary mb-4 md:mb-6">{description}</p>
 
-      <div className="flex items-baseline gap-1 mb-6">
-        <span className="text-4xl font-bold text-text-primary font-mono">{price}</span>
-        {price !== 'Custom' && <span className="text-text-muted">/month</span>}
+      <div className="flex items-baseline gap-1 mb-4 md:mb-6">
+        <span className="text-3xl md:text-4xl font-bold text-text-primary font-mono">{price}</span>
+        {price !== 'Custom' && <span className="text-sm md:text-base text-text-muted">/month</span>}
       </div>
 
-      <ul className="space-y-3 mb-8">
+      <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8">
         {features.map((feature, i) => (
-          <li key={i} className="flex items-center gap-3 text-text-secondary">
-            <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
+          <li key={i} className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-text-secondary">
+            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-success flex-shrink-0" />
             <span>{feature}</span>
           </li>
         ))}
       </ul>
 
-      <Link
-        to="/register"
-        className={`block w-full py-3 rounded-lg font-medium text-center transition-all ${
+      <button
+        onClick={handleClick}
+        className={`block w-full py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base text-center transition-all ${
           highlighted
             ? 'bg-gradient-to-r from-accent-cyan to-accent-purple text-white hover:opacity-90'
             : 'bg-surface-hover text-text-primary border border-surface-border hover:border-accent-cyan/30'
         }`}
       >
-        Get Started
-      </Link>
+        {isLoggedIn ? 'Subscribe' : 'Get Started'}
+      </button>
     </motion.div>
   );
 }
@@ -402,7 +418,8 @@ function PricingCard({
 export function LandingPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { register } = useAuthStore();
+  const { register, user } = useAuthStore();
+  const isLoggedIn = !!user;
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -495,6 +512,7 @@ export function LandingPage() {
       name: 'Starter',
       price: '$29',
       description: 'Perfect for individuals',
+      planId: 'starter',
       features: [
         'Up to 1,000 messages/month',
         'Basic AI categorization',
@@ -506,6 +524,7 @@ export function LandingPage() {
       name: 'Pro',
       price: '$79',
       description: 'For power users',
+      planId: 'pro',
       features: [
         'Unlimited messages',
         'Advanced AI with learning',
@@ -519,6 +538,7 @@ export function LandingPage() {
       name: 'Enterprise',
       price: 'Custom',
       description: 'For teams and organizations',
+      planId: 'enterprise',
       features: [
         'Everything in Pro',
         'Team collaboration',
@@ -536,14 +556,14 @@ export function LandingPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+        className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 md:py-4 bg-surface-base/80 backdrop-blur-md border-b border-surface-border/50"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
-              <Layers className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
+              <Layers className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">GetAnswers</span>
+            <span className="text-lg md:text-xl font-bold tracking-tight">GetAnswers</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -552,22 +572,38 @@ export function LandingPage() {
             <a href="#pricing" className="text-text-secondary hover:text-text-primary transition-colors">Pricing</a>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-text-secondary hover:text-text-primary transition-colors">
-              Sign In
-            </Link>
-            <Link
-              to="/register"
-              className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-white font-medium hover:opacity-90 transition-opacity"
-            >
-              Get Started
-            </Link>
+          <div className="flex items-center gap-2 md:gap-4">
+            {isLoggedIn ? (
+              <>
+                <Link to="/billing" className="hidden sm:block text-text-secondary hover:text-text-primary transition-colors">
+                  Billing
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="px-3 md:px-5 py-2 md:py-2.5 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-white text-sm md:text-base font-medium hover:opacity-90 transition-opacity"
+                >
+                  Dashboard
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden sm:block text-text-secondary hover:text-text-primary transition-colors">
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-3 md:px-5 py-2 md:py-2.5 rounded-lg bg-gradient-to-r from-accent-cyan to-accent-purple text-white text-sm md:text-base font-medium hover:opacity-90 transition-opacity"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </motion.nav>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 pb-32 px-6">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-16 md:pt-20 pb-20 md:pb-32 px-4 md:px-6">
         <GradientOrbs />
         <GridPattern />
         <Particles />
@@ -703,45 +739,75 @@ export function LandingPage() {
       </section>
 
       {/* Dashboard Preview Section */}
-      <section id="how-it-works" className="py-32 px-6">
+      <section id="how-it-works" className="py-16 md:py-32 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8 md:mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
               Mission Control for Your Inbox
             </h2>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-text-secondary max-w-2xl mx-auto">
               A single dashboard to see what needs your attention, what's waiting on others,
               and what AI has already handled for you.
             </p>
           </motion.div>
 
-          <DashboardPreview />
+          {/* Hide complex dashboard preview on small screens */}
+          <div className="hidden md:block">
+            <DashboardPreview />
+          </div>
+
+          {/* Simplified mobile preview */}
+          <div className="md:hidden">
+            <div className="rounded-xl border border-surface-border bg-surface-card p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-cyan to-accent-purple" />
+                <div className="flex-1 h-3 rounded bg-surface-border" />
+                <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-surface-base border border-surface-border">
+                  <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                  <span className="text-[10px] text-success font-mono">All Clear</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { color: 'bg-critical', label: 'Needs Decision', count: '3' },
+                  { color: 'bg-warning', label: 'Waiting', count: '7' },
+                  { color: 'bg-success', label: 'Handled by AI', count: '142' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-surface-base border border-surface-border">
+                    <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                    <span className="text-xs text-text-secondary flex-1">{item.label}</span>
+                    <span className="text-xs font-mono text-text-primary">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-32 px-6 bg-surface-elevated/30">
+      <section id="features" className="py-16 md:py-32 px-4 md:px-6 bg-surface-elevated/30">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8 md:mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
               Everything You Need
             </h2>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-text-secondary max-w-2xl mx-auto">
               Powerful features that put you back in control of your communications.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {features.map((feature, index) => (
               <FeatureCard key={feature.title} {...feature} index={index} />
             ))}
@@ -750,25 +816,25 @@ export function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 px-6">
+      <section id="pricing" className="py-16 md:py-32 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8 md:mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-text-secondary max-w-2xl mx-auto">
               Start free. Upgrade when you're ready. No hidden fees.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {pricingPlans.map((plan, index) => (
-              <PricingCard key={plan.name} {...plan} index={index} />
+              <PricingCard key={plan.name} {...plan} index={index} isLoggedIn={isLoggedIn} />
             ))}
           </div>
         </div>

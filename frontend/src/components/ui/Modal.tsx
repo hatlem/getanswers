@@ -17,6 +17,7 @@ const sizeClasses = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
+  full: 'max-w-full',
 };
 
 export function Modal({
@@ -67,24 +68,26 @@ export function Modal({
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               className={cn(
-                'bg-surface-elevated rounded-xl shadow-2xl border border-surface-border',
+                'bg-surface-elevated shadow-2xl border border-surface-border',
                 'pointer-events-auto w-full',
+                // Mobile: full width, rounded top corners, max height
+                'rounded-t-2xl sm:rounded-xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col',
                 sizeClasses[size]
               )}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-center justify-between p-6 border-b border-surface-border">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-surface-border shrink-0">
                   {title && (
-                    <h2 className="text-lg font-semibold text-text-primary">
+                    <h2 className="text-base sm:text-lg font-semibold text-text-primary">
                       {title}
                     </h2>
                   )}
@@ -100,7 +103,7 @@ export function Modal({
               )}
 
               {/* Content */}
-              <div className="p-6">{children}</div>
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">{children}</div>
             </motion.div>
           </div>
         </>

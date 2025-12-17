@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 from uuid import UUID
 
+import stripe
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select, func, or_
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.exceptions import NotFoundError, ConflictError, ValidationError
 from app.core.logging import logger
 from app.api.deps import require_super_admin
@@ -17,6 +19,7 @@ from app.models import (
     User, Organization, OrganizationMember, OrganizationInvite,
     OrganizationRole, Subscription, PlanTier, SubscriptionStatus
 )
+from app.services.stripe import get_stripe_mode, _configure_stripe
 
 router = APIRouter()
 
@@ -770,3 +773,416 @@ async def set_user_subscription(
         status=subscription.status.value,
         current_period_end=subscription.current_period_end
     )
+
+
+# =============================================================================
+# Stripe Product Management Schemas
+# =============================================================================
+
+class StripePriceSummary(BaseModel):
+    id: str
+    unit_amount: Optional[int]
+    currency: str
+    recurring_interval: Optional[str]
+    recurring_interval_count: Optional[int]
+    active: bool
+    nickname: Optional[str]
+    plan_tier: Optional[str] = None  # Maps to our PlanTier
+
+
+class StripeProductSummary(BaseModel):
+    id: str
+    name: str
+    description: Optional[str]
+    active: bool
+    default_price_id: Optional[str]
+    metadata: dict
+    created: int
+    prices: List[StripePriceSummary] = []
+
+
+class CreateProductRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = None
+    plan_tier: PlanTier = Field(..., description="The plan tier this product maps to")
+
+
+class UpdateProductRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    active: Optional[bool] = None
+
+
+class CreatePriceRequest(BaseModel):
+    product_id: str
+    unit_amount: int = Field(..., ge=0, description="Amount in cents")
+    currency: str = Field(default="usd", min_length=3, max_length=3)
+    interval: str = Field(default="month", pattern="^(day|week|month|year)$")
+    interval_count: int = Field(default=1, ge=1)
+    nickname: Optional[str] = None
+    plan_tier: PlanTier = Field(..., description="The plan tier this price maps to")
+
+
+class UpdatePriceRequest(BaseModel):
+    active: Optional[bool] = None
+    nickname: Optional[str] = None
+
+
+class PriceMappingRequest(BaseModel):
+    price_id: str
+    plan_tier: PlanTier
+
+
+# =============================================================================
+# Stripe Product Management Endpoints
+# =============================================================================
+
+PLATFORM_NAME = "GetAnswers"
+
+
+def _get_plan_tier_from_metadata(metadata: dict) -> Optional[str]:
+    """Extract plan tier from product/price metadata."""
+    return metadata.get("plan_tier")
+
+
+@router.get("/stripe/products", response_model=List[StripeProductSummary])
+async def list_stripe_products(
+    admin: User = Depends(require_super_admin),
+    include_inactive: bool = False
+):
+    """List all Stripe products for this platform (super admin only)."""
+    _configure_stripe()
+
+    try:
+        # List products with our platform metadata
+        products = stripe.Product.list(
+            limit=100,
+            active=None if include_inactive else True
+        )
+
+        # Filter to only GetAnswers products
+        platform_products = [
+            p for p in products.data
+            if p.metadata.get("platform") == "getanswers" or PLATFORM_NAME in p.name
+        ]
+
+        result = []
+        for product in platform_products:
+            # Get prices for this product
+            prices = stripe.Price.list(product=product.id, limit=100)
+
+            price_summaries = [
+                StripePriceSummary(
+                    id=price.id,
+                    unit_amount=price.unit_amount,
+                    currency=price.currency,
+                    recurring_interval=price.recurring.interval if price.recurring else None,
+                    recurring_interval_count=price.recurring.interval_count if price.recurring else None,
+                    active=price.active,
+                    nickname=price.nickname,
+                    plan_tier=_get_plan_tier_from_metadata(price.metadata)
+                )
+                for price in prices.data
+            ]
+
+            result.append(StripeProductSummary(
+                id=product.id,
+                name=product.name,
+                description=product.description,
+                active=product.active,
+                default_price_id=product.default_price,
+                metadata=dict(product.metadata),
+                created=product.created,
+                prices=price_summaries
+            ))
+
+        logger.info(f"Super admin {admin.email} listed Stripe products (count: {len(result)})")
+        return result
+
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error listing products: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.get("/stripe/products/{product_id}", response_model=StripeProductSummary)
+async def get_stripe_product(
+    product_id: str,
+    admin: User = Depends(require_super_admin)
+):
+    """Get a specific Stripe product (super admin only)."""
+    _configure_stripe()
+
+    try:
+        product = stripe.Product.retrieve(product_id)
+        prices = stripe.Price.list(product=product_id, limit=100)
+
+        price_summaries = [
+            StripePriceSummary(
+                id=price.id,
+                unit_amount=price.unit_amount,
+                currency=price.currency,
+                recurring_interval=price.recurring.interval if price.recurring else None,
+                recurring_interval_count=price.recurring.interval_count if price.recurring else None,
+                active=price.active,
+                nickname=price.nickname,
+                plan_tier=_get_plan_tier_from_metadata(price.metadata)
+            )
+            for price in prices.data
+        ]
+
+        return StripeProductSummary(
+            id=product.id,
+            name=product.name,
+            description=product.description,
+            active=product.active,
+            default_price_id=product.default_price,
+            metadata=dict(product.metadata),
+            created=product.created,
+            prices=price_summaries
+        )
+
+    except stripe.InvalidRequestError:
+        raise NotFoundError("Product", product_id)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error getting product: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.post("/stripe/products", response_model=StripeProductSummary)
+async def create_stripe_product(
+    data: CreateProductRequest,
+    admin: User = Depends(require_super_admin)
+):
+    """Create a new Stripe product (super admin only)."""
+    _configure_stripe()
+
+    try:
+        # Create product with platform metadata
+        product = stripe.Product.create(
+            name=f"{PLATFORM_NAME} {data.name}",
+            description=data.description,
+            metadata={
+                "platform": "getanswers",
+                "plan_tier": data.plan_tier.value,
+                "created_by": admin.email
+            }
+        )
+
+        logger.info(f"Super admin {admin.email} created Stripe product: {product.name} (ID: {product.id})")
+
+        return StripeProductSummary(
+            id=product.id,
+            name=product.name,
+            description=product.description,
+            active=product.active,
+            default_price_id=product.default_price,
+            metadata=dict(product.metadata),
+            created=product.created,
+            prices=[]
+        )
+
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error creating product: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.patch("/stripe/products/{product_id}", response_model=StripeProductSummary)
+async def update_stripe_product(
+    product_id: str,
+    data: UpdateProductRequest,
+    admin: User = Depends(require_super_admin)
+):
+    """Update a Stripe product (super admin only)."""
+    _configure_stripe()
+
+    try:
+        update_params = {}
+        if data.name is not None:
+            update_params["name"] = f"{PLATFORM_NAME} {data.name}"
+        if data.description is not None:
+            update_params["description"] = data.description
+        if data.active is not None:
+            update_params["active"] = data.active
+
+        product = stripe.Product.modify(product_id, **update_params)
+        prices = stripe.Price.list(product=product_id, limit=100)
+
+        price_summaries = [
+            StripePriceSummary(
+                id=price.id,
+                unit_amount=price.unit_amount,
+                currency=price.currency,
+                recurring_interval=price.recurring.interval if price.recurring else None,
+                recurring_interval_count=price.recurring.interval_count if price.recurring else None,
+                active=price.active,
+                nickname=price.nickname,
+                plan_tier=_get_plan_tier_from_metadata(price.metadata)
+            )
+            for price in prices.data
+        ]
+
+        logger.info(f"Super admin {admin.email} updated Stripe product: {product_id}")
+
+        return StripeProductSummary(
+            id=product.id,
+            name=product.name,
+            description=product.description,
+            active=product.active,
+            default_price_id=product.default_price,
+            metadata=dict(product.metadata),
+            created=product.created,
+            prices=price_summaries
+        )
+
+    except stripe.InvalidRequestError:
+        raise NotFoundError("Product", product_id)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error updating product: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.delete("/stripe/products/{product_id}")
+async def archive_stripe_product(
+    product_id: str,
+    admin: User = Depends(require_super_admin)
+):
+    """Archive a Stripe product (super admin only). Products cannot be deleted, only archived."""
+    _configure_stripe()
+
+    try:
+        product = stripe.Product.modify(product_id, active=False)
+
+        logger.warning(f"Super admin {admin.email} archived Stripe product: {product_id}")
+
+        return {"message": f"Product {product.name} archived", "id": product_id}
+
+    except stripe.InvalidRequestError:
+        raise NotFoundError("Product", product_id)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error archiving product: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.post("/stripe/prices", response_model=StripePriceSummary)
+async def create_stripe_price(
+    data: CreatePriceRequest,
+    admin: User = Depends(require_super_admin)
+):
+    """Create a new price for a product (super admin only)."""
+    _configure_stripe()
+
+    try:
+        price = stripe.Price.create(
+            product=data.product_id,
+            unit_amount=data.unit_amount,
+            currency=data.currency,
+            recurring={
+                "interval": data.interval,
+                "interval_count": data.interval_count
+            },
+            nickname=data.nickname,
+            metadata={
+                "platform": "getanswers",
+                "plan_tier": data.plan_tier.value,
+                "created_by": admin.email
+            }
+        )
+
+        logger.info(
+            f"Super admin {admin.email} created Stripe price: ${data.unit_amount/100:.2f}/{data.interval} "
+            f"for product {data.product_id} (ID: {price.id})"
+        )
+
+        return StripePriceSummary(
+            id=price.id,
+            unit_amount=price.unit_amount,
+            currency=price.currency,
+            recurring_interval=price.recurring.interval if price.recurring else None,
+            recurring_interval_count=price.recurring.interval_count if price.recurring else None,
+            active=price.active,
+            nickname=price.nickname,
+            plan_tier=data.plan_tier.value
+        )
+
+    except stripe.InvalidRequestError as e:
+        if "product" in str(e).lower():
+            raise NotFoundError("Product", data.product_id)
+        raise ValidationError(f"Stripe error: {str(e)}")
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error creating price: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.patch("/stripe/prices/{price_id}", response_model=StripePriceSummary)
+async def update_stripe_price(
+    price_id: str,
+    data: UpdatePriceRequest,
+    admin: User = Depends(require_super_admin)
+):
+    """Update a Stripe price (super admin only). Note: Only active status and nickname can be changed."""
+    _configure_stripe()
+
+    try:
+        update_params = {}
+        if data.active is not None:
+            update_params["active"] = data.active
+        if data.nickname is not None:
+            update_params["nickname"] = data.nickname
+
+        price = stripe.Price.modify(price_id, **update_params)
+
+        logger.info(f"Super admin {admin.email} updated Stripe price: {price_id}")
+
+        return StripePriceSummary(
+            id=price.id,
+            unit_amount=price.unit_amount,
+            currency=price.currency,
+            recurring_interval=price.recurring.interval if price.recurring else None,
+            recurring_interval_count=price.recurring.interval_count if price.recurring else None,
+            active=price.active,
+            nickname=price.nickname,
+            plan_tier=_get_plan_tier_from_metadata(price.metadata)
+        )
+
+    except stripe.InvalidRequestError:
+        raise NotFoundError("Price", price_id)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error updating price: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.delete("/stripe/prices/{price_id}")
+async def archive_stripe_price(
+    price_id: str,
+    admin: User = Depends(require_super_admin)
+):
+    """Archive a Stripe price (super admin only). Prices cannot be deleted, only archived."""
+    _configure_stripe()
+
+    try:
+        price = stripe.Price.modify(price_id, active=False)
+
+        logger.warning(f"Super admin {admin.email} archived Stripe price: {price_id}")
+
+        return {"message": f"Price archived", "id": price_id}
+
+    except stripe.InvalidRequestError:
+        raise NotFoundError("Price", price_id)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error archiving price: {e}")
+        raise ValidationError(f"Stripe error: {str(e)}")
+
+
+@router.get("/stripe/config")
+async def get_stripe_config(
+    admin: User = Depends(require_super_admin)
+):
+    """Get current Stripe configuration (super admin only)."""
+    mode = get_stripe_mode()
+
+    return {
+        "mode": mode,
+        "test_key_configured": bool(settings.STRIPE_SECRET_KEY),
+        "live_key_configured": bool(settings.STRIPE_LIVE_SECRET_KEY),
+        "webhook_secret_configured": bool(settings.STRIPE_WEBHOOK_SECRET),
+    }

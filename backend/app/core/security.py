@@ -1,10 +1,12 @@
 """Security utilities for authentication and authorization."""
 
+import base64
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
+from cryptography.fernet import Fernet
 from jose import JWTError, jwt
 
 from app.core.config import settings
@@ -286,3 +288,75 @@ def sanitize_email(email: str) -> str:
         # Returns: "user@example.com"
     """
     return email.strip().lower()
+
+
+def _get_encryption_key() -> bytes:
+    """
+    Get or derive the encryption key from SECRET_KEY.
+
+    Uses the application's SECRET_KEY to derive a Fernet-compatible key.
+    This ensures consistent encryption/decryption across app restarts.
+
+    Returns:
+        bytes: 32-byte Fernet encryption key
+    """
+    # Derive a consistent 32-byte key from SECRET_KEY using SHA256
+    import hashlib
+    key_material = settings.SECRET_KEY.encode('utf-8')
+    derived_key = hashlib.sha256(key_material).digest()
+    # Fernet requires base64-encoded 32-byte key
+    return base64.urlsafe_b64encode(derived_key)
+
+
+def encrypt_string(plaintext: str) -> str:
+    """
+    Encrypt a string using Fernet symmetric encryption.
+
+    Uses the application's SECRET_KEY to derive encryption key.
+    This is suitable for encrypting sensitive data like passwords,
+    API keys, and OAuth tokens that need to be stored and retrieved.
+
+    Args:
+        plaintext: String to encrypt
+
+    Returns:
+        str: Base64-encoded encrypted string
+
+    Example:
+        encrypted_password = encrypt_string("my_secret_password")
+        # Store encrypted_password in database
+    """
+    if not plaintext:
+        return ""
+
+    fernet = Fernet(_get_encryption_key())
+    encrypted_bytes = fernet.encrypt(plaintext.encode('utf-8'))
+    return encrypted_bytes.decode('utf-8')
+
+
+def decrypt_string(encrypted: str) -> str:
+    """
+    Decrypt a string that was encrypted with encrypt_string.
+
+    Args:
+        encrypted: Base64-encoded encrypted string
+
+    Returns:
+        str: Decrypted plaintext string
+
+    Raises:
+        ValueError: If decryption fails (invalid key or corrupted data)
+
+    Example:
+        password = decrypt_string(encrypted_password)
+        # Use password to connect to email server
+    """
+    if not encrypted:
+        return ""
+
+    try:
+        fernet = Fernet(_get_encryption_key())
+        decrypted_bytes = fernet.decrypt(encrypted.encode('utf-8'))
+        return decrypted_bytes.decode('utf-8')
+    except Exception as e:
+        raise ValueError(f"Failed to decrypt string: {str(e)}")

@@ -20,6 +20,10 @@ interface AppState {
   selectedObjectiveId: string | null;
   activeFilter: 'all' | 'high_risk' | 'low_confidence';
 
+  // Mobile UI state
+  isMobileMenuOpen: boolean;
+  isMobileDetailOpen: boolean;
+
   // Actions
   setUser: (user: User | null) => void;
   setAuthenticated: (isAuthenticated: boolean) => void;
@@ -28,6 +32,9 @@ interface AppState {
   setSelectedCard: (cardId: string | null, objectiveId?: string | null) => void;
   clearSelection: () => void;
   logout: () => void;
+  setMobileMenuOpen: (isOpen: boolean) => void;
+  setMobileDetailOpen: (isOpen: boolean) => void;
+  closeMobileDrawers: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -40,6 +47,8 @@ export const useAppStore = create<AppState>()(
       selectedCardId: null,
       selectedObjectiveId: null,
       activeFilter: 'all',
+      isMobileMenuOpen: false,
+      isMobileDetailOpen: false,
 
       // Actions
       setUser: (user) => {
@@ -79,6 +88,18 @@ export const useAppStore = create<AppState>()(
           selectedCardId: null,
           selectedObjectiveId: null,
         });
+      },
+
+      setMobileMenuOpen: (isOpen) => {
+        set({ isMobileMenuOpen: isOpen, isMobileDetailOpen: false });
+      },
+
+      setMobileDetailOpen: (isOpen) => {
+        set({ isMobileDetailOpen: isOpen, isMobileMenuOpen: false });
+      },
+
+      closeMobileDrawers: () => {
+        set({ isMobileMenuOpen: false, isMobileDetailOpen: false });
       },
     }),
     {

@@ -4,6 +4,7 @@ import { ActionCardSkeleton } from '../ui/Skeleton';
 import { ErrorState } from '../ui/ErrorState';
 import { EmptyQueueState, NoFilterResultsState } from '../ui/EmptyState';
 import { useQueue } from '../../hooks/useQueue';
+import { useAppStore } from '../../stores/appStore';
 import type { ActionCard as ActionCardType, ActionType, ObjectiveStatus } from '../../types';
 
 interface CenterColumnProps {
@@ -29,6 +30,8 @@ export function CenterColumn({
   onFilterChange,
   activeView,
 }: CenterColumnProps) {
+  const { setMobileDetailOpen } = useAppStore();
+
   // Fetch queue data
   // Map frontend view to backend status: 'needs_decision' -> 'pending'
   const {
@@ -43,6 +46,15 @@ export function CenterColumn({
 
   const cards = queueResponse?.cards || [];
 
+  // Handle card selection - also open mobile detail drawer
+  const handleSelectCard = (card: ActionCardType) => {
+    onSelectCard(card);
+    // Open mobile detail drawer on smaller screens
+    if (window.innerWidth < 1024) {
+      setMobileDetailOpen(true);
+    }
+  };
+
   // Filter cards based on active filter
   const filteredCards = cards.filter((card) => {
     if (activeFilter === 'all') return true;
@@ -55,25 +67,25 @@ export function CenterColumn({
     <section className="flex-1 flex flex-col min-w-0 overflow-hidden">
       {/* Header */}
       <motion.div
-        className="px-6 py-5 border-b border-surface-border bg-surface-elevated/50"
+        className="px-4 md:px-6 py-4 md:py-5 border-b border-surface-border bg-surface-elevated/50"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-text-primary">Review Queue</h1>
-            <p className="text-sm text-text-secondary mt-0.5">
+            <h1 className="text-lg md:text-xl font-semibold text-text-primary">Review Queue</h1>
+            <p className="text-xs md:text-sm text-text-secondary mt-0.5">
               {filteredCards.length} item{filteredCards.length !== 1 ? 's' : ''} require{filteredCards.length === 1 ? 's' : ''} your decision
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-lg bg-surface-card border border-surface-border">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-lg bg-surface-card border border-surface-border self-start sm:self-auto">
             {filterButtons.map((btn) => (
               <button
                 key={btn.id}
                 onClick={() => onFilterChange(btn.id)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                   activeFilter === btn.id
                     ? 'bg-accent-cyan/10 text-accent-cyan'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
@@ -87,8 +99,8 @@ export function CenterColumn({
       </motion.div>
 
       {/* Cards List */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-4 max-w-3xl mx-auto">
+      <div className="flex-1 overflow-y-auto p-3 md:p-6">
+        <div className="space-y-3 md:space-y-4 max-w-3xl mx-auto">
           {/* Loading State */}
           {isLoading && (
             <>
@@ -113,7 +125,7 @@ export function CenterColumn({
                     card={card}
                     index={index}
                     isSelected={selectedCardId === card.id}
-                    onSelect={onSelectCard}
+                    onSelect={handleSelectCard}
                     onAction={onAction}
                   />
                 ))

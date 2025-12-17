@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
   Clock,
@@ -7,9 +7,11 @@ import {
   VolumeX,
   Settings,
   MessageSquare,
+  X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { NavItemSkeleton, StatsSkeleton } from '../ui/Skeleton';
+import { useAppStore } from '../../stores/appStore';
 import type { NavigationCount, EfficiencyStats, ObjectiveStatus } from '../../types';
 
 interface LeftColumnProps {
@@ -68,6 +70,13 @@ const variantStyles = {
 };
 
 export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColumnProps) {
+  const { isMobileMenuOpen, setMobileMenuOpen, closeMobileDrawers } = useAppStore();
+
+  const handleViewChange = (view: ObjectiveStatus | 'needs_decision') => {
+    onViewChange(view);
+    closeMobileDrawers();
+  };
+
   const activeMissions: NavItem[] = [
     {
       id: 'needs_decision',
@@ -137,7 +146,7 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
         transition={{ duration: 0.2, delay: index * 0.05 }}
       >
         <button
-          onClick={() => onViewChange(item.id)}
+          onClick={() => handleViewChange(item.id)}
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent transition-all group',
             isActive ? styles.active : 'hover:bg-surface-hover hover:border-surface-border'
@@ -170,8 +179,9 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
     );
   };
 
-  return (
-    <aside className="w-72 bg-surface-elevated border-r border-surface-border flex flex-col shrink-0">
+  // Sidebar content - shared between desktop and mobile
+  const sidebarContent = (
+    <>
       <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
         {/* Active Missions */}
         <div>
@@ -235,6 +245,53 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
           </div>
         )}
       </motion.div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex w-72 bg-surface-elevated border-r border-surface-border flex-col shrink-0">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+
+            {/* Drawer */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="lg:hidden fixed left-0 top-0 h-full w-72 max-w-[85vw] bg-surface-elevated border-r border-surface-border flex flex-col z-50"
+            >
+              {/* Mobile drawer header */}
+              <div className="h-14 px-4 flex items-center justify-between border-b border-surface-border">
+                <span className="text-lg font-semibold text-text-primary">Menu</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-surface-hover transition-colors"
+                >
+                  <X className="w-5 h-5 text-text-muted" />
+                </button>
+              </div>
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

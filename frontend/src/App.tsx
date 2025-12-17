@@ -16,6 +16,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { EditModal } from './components/modals/EditModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { PasswordSetupModal } from './components/PasswordSetupModal';
+import { BillingPage } from './components/billing/BillingPage';
+import { SettingsPage } from './components/settings/SettingsPage';
+import { AdminPage } from './components/admin/AdminPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
@@ -247,6 +250,30 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <BillingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireSuperAdmin>
+              <AdminPage />
             </ProtectedRoute>
           }
         />

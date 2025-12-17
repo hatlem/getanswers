@@ -145,27 +145,27 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-surface-elevated rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-surface-border max-h-[90vh] flex flex-col"
+        className="bg-surface-elevated rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-surface-border max-h-[95vh] sm:max-h-[90vh] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-surface-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-surface-border flex-shrink-0">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center">
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">
+              <h2 className="text-base md:text-lg font-semibold text-text-primary">
                 {currentStep === 'welcome' && 'Welcome to GetAnswers'}
                 {currentStep === 'connect' && 'Connect Your Email'}
                 {currentStep === 'smtp' && 'SMTP/IMAP Setup'}
                 {currentStep === 'preferences' && 'Set Your Preferences'}
               </h2>
-              <p className="text-sm text-text-muted">Step {stepIndex + 1} of 3</p>
+              <p className="text-xs md:text-sm text-text-muted">Step {stepIndex + 1} of 3</p>
             </div>
           </div>
           <button
@@ -177,7 +177,7 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1">
           <AnimatePresence mode="wait">
             {/* Step 1: Welcome */}
             {currentStep === 'welcome' && (
@@ -187,16 +187,16 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-6"
+                className="space-y-4 md:space-y-6"
               >
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
-                    <Zap className="w-10 h-10 text-accent-cyan" />
+                <div className="text-center py-2 md:py-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
+                    <Zap className="w-8 h-8 md:w-10 md:h-10 text-accent-cyan" />
                   </div>
-                  <h3 className="text-2xl font-bold text-text-primary mb-3">
+                  <h3 className="text-xl md:text-2xl font-bold text-text-primary mb-2 md:mb-3">
                     Your inbox, on autopilot
                   </h3>
-                  <p className="text-text-secondary max-w-sm mx-auto">
+                  <p className="text-sm md:text-base text-text-secondary max-w-sm mx-auto">
                     GetAnswers uses AI to triage, categorize, and handle your emails automatically.
                     Let's get you set up in just a few steps.
                   </p>
@@ -230,16 +230,16 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-6"
+                className="space-y-4 md:space-y-6"
               >
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
-                    <Mail className="w-10 h-10 text-accent-cyan" />
+                <div className="text-center py-2 md:py-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
+                    <Mail className="w-8 h-8 md:w-10 md:h-10 text-accent-cyan" />
                   </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-2">
+                  <h3 className="text-lg md:text-xl font-bold text-text-primary mb-2">
                     Connect your inbox
                   </h3>
-                  <p className="text-text-secondary text-sm">
+                  <p className="text-text-secondary text-xs md:text-sm">
                     We need access to read and organize your emails. Your data is secure and encrypted.
                   </p>
                 </div>
@@ -355,7 +355,7 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
 
                 {/* Server settings (collapsible for custom) */}
                 {smtpProvider === 'custom' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-text-secondary mb-1">IMAP Server</label>
                       <input
@@ -431,16 +431,16 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-6"
+                className="space-y-4 md:space-y-6"
               >
-                <div className="text-center py-4">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
-                    <Shield className="w-10 h-10 text-accent-cyan" />
+                <div className="text-center py-2 md:py-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center">
+                    <Shield className="w-8 h-8 md:w-10 md:h-10 text-accent-cyan" />
                   </div>
-                  <h3 className="text-xl font-bold text-text-primary mb-2">
+                  <h3 className="text-lg md:text-xl font-bold text-text-primary mb-2">
                     Customize your experience
                   </h3>
-                  <p className="text-text-secondary text-sm">
+                  <p className="text-text-secondary text-xs md:text-sm">
                     Set your preferences. You can change these anytime in settings.
                   </p>
                 </div>
@@ -478,7 +478,7 @@ export function OnboardingModal({ isOpen, onClose, onConnectGmail, onConnectOutl
         </div>
 
         {/* Footer */}
-        <div className="border-t border-surface-border p-6 flex-shrink-0">
+        <div className="border-t border-surface-border p-4 md:p-6 flex-shrink-0">
           {/* Progress dots */}
           <div className="flex items-center justify-center gap-2 mb-4">
             {[0, 1, 2].map((i) => (

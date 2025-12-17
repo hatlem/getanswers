@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.exceptions import NotFoundError, ConflictError, ValidationError, AuthorizationError
 from app.core.logging import logger
+from app.services.email import email_service
 from app.api.deps import (
     get_current_user, get_current_organization, get_org_membership,
     require_org_admin, require_org_owner
@@ -23,6 +24,138 @@ from app.models import (
 )
 
 router = APIRouter()
+
+
+async def send_organization_invitation_email(
+    invite: OrganizationInvite,
+    organization: Organization,
+    invited_by_email: str
+) -> bool:
+    """
+    Send organization invitation email to the invited user.
+
+    Args:
+        invite: The organization invite object
+        organization: The organization they're being invited to
+        invited_by_email: Email of the user who sent the invitation
+
+    Returns:
+        bool: True if email was sent successfully, False otherwise
+    """
+    from app.core.config import settings
+
+    # Build the invitation acceptance URL
+    accept_url = f"{settings.APP_URL}/invites/accept?token={invite.token}"
+
+    # Determine role display name
+    role_display = invite.role.value.capitalize() if hasattr(invite.role, 'value') else str(invite.role).capitalize()
+
+    # Email subject
+    subject = f"You've been invited to join {organization.name}"
+
+    # HTML email body
+    html_body = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px; text-align: center;">
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 600; color: #1a1a1a;">
+                                Organization Invitation
+                            </h1>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 20px 40px;">
+                            <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #333333;">
+                                You've been invited by <strong>{invited_by_email}</strong> to join the organization:
+                            </p>
+                            <div style="padding: 20px; background-color: #f8f9fa; border-radius: 6px; margin: 0 0 24px;">
+                                <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 600; color: #1a1a1a;">
+                                    {organization.name}
+                                </h2>
+                                {f'<p style="margin: 0; font-size: 14px; color: #666666;">{organization.description}</p>' if organization.description else ''}
+                            </div>
+                            <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6; color: #666666;">
+                                You will be joining as: <strong style="color: #2563eb;">{role_display}</strong>
+                            </p>
+                            <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #999999;">
+                                This invitation will expire on {invite.expires_at.strftime('%B %d, %Y at %I:%M %p UTC')}.
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- CTA Button -->
+                    <tr>
+                        <td style="padding: 0 40px 40px; text-align: center;">
+                            <a href="{accept_url}" style="display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500;">
+                                Accept Invitation
+                            </a>
+                        </td>
+                    </tr>
+                    <!-- Alternative Link -->
+                    <tr>
+                        <td style="padding: 0 40px 40px;">
+                            <p style="margin: 0; font-size: 13px; color: #999999; text-align: center;">
+                                Or copy and paste this URL into your browser:<br>
+                                <a href="{accept_url}" style="color: #2563eb; word-break: break-all;">{accept_url}</a>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 24px 40px; border-top: 1px solid #eeeeee; text-align: center;">
+                            <p style="margin: 0; font-size: 12px; color: #999999;">
+                                GetAnswers - AI-powered email management
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    """.strip()
+
+    # Plain text email body
+    text_body = f"""
+You've been invited to join {organization.name}
+
+{invited_by_email} has invited you to join their organization on GetAnswers.
+
+Organization: {organization.name}
+{f'Description: {organization.description}' if organization.description else ''}
+Role: {role_display}
+
+Click the link below to accept the invitation:
+{accept_url}
+
+This invitation will expire on {invite.expires_at.strftime('%B %d, %Y at %I:%M %p UTC')}.
+
+---
+GetAnswers - AI-powered email management
+    """.strip()
+
+    # Send the email
+    success = await email_service.send_email(
+        to=invite.email,
+        subject=subject,
+        html_body=html_body,
+        text_body=text_body,
+        tags=["organization", "invitation"]
+    )
+
+    return success
 
 
 def get_role_value(role: Union[OrganizationRole, str]) -> str:
@@ -528,7 +661,17 @@ async def create_invite(
     await db.commit()
     await db.refresh(invite)
 
-    # TODO: Send invitation email
+    # Send invitation email
+    email_sent = await send_organization_invitation_email(
+        invite=invite,
+        organization=organization,
+        invited_by_email=user.email
+    )
+
+    if email_sent:
+        logger.info(f"Invitation email sent to {data.email} for organization {organization.name}")
+    else:
+        logger.warning(f"Failed to send invitation email to {data.email}, but invitation was created")
 
     logger.info(f"Invitation sent to {data.email} for organization {organization.name}")
 

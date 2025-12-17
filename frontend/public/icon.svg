@@ -1,0 +1,10 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect fill="url(#bgGradient)" width="180" height="180" rx="37" />
+  <text fill="white" x="90" y="118" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="bold" text-anchor="middle">GA</text>
+</svg>

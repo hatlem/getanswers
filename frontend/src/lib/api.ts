@@ -297,4 +297,210 @@ export const api = {
   },
 };
 
+// Billing types
+export interface BillingConfig {
+  publishable_key: string;
+  mode: string;
+}
+
+export interface SubscriptionInfo {
+  plan: string;
+  status: string;
+  is_active: boolean;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  stripe_mode: string;
+}
+
+export interface CheckoutSession {
+  checkout_url: string;
+  session_id: string;
+}
+
+export interface BillingPortal {
+  portal_url: string;
+}
+
+export interface FeaturesInfo {
+  features: Record<string, boolean>;
+  plan: string;
+}
+
+// Billing endpoints
+export const billingApi = {
+  getConfig: async (): Promise<BillingConfig> => {
+    return httpClient.get<BillingConfig>('/api/billing/config');
+  },
+
+  getSubscription: async (): Promise<SubscriptionInfo> => {
+    return httpClient.get<SubscriptionInfo>('/api/billing/subscription');
+  },
+
+  createCheckout: async (priceId: string, successUrl: string, cancelUrl: string): Promise<CheckoutSession> => {
+    return httpClient.post<CheckoutSession>('/api/billing/checkout', {
+      price_id: priceId,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    });
+  },
+
+  createPortal: async (returnUrl: string): Promise<BillingPortal> => {
+    return httpClient.post<BillingPortal>(`/api/billing/portal?return_url=${encodeURIComponent(returnUrl)}`);
+  },
+
+  getFeatures: async (): Promise<FeaturesInfo> => {
+    return httpClient.get<FeaturesInfo>('/api/billing/features');
+  },
+};
+
+// Admin types
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  is_super_admin: boolean;
+  created_at: string;
+}
+
+export interface AdminOrganization {
+  id: string;
+  name: string;
+  slug: string;
+  is_personal: boolean;
+  is_active: boolean;
+  member_count: number;
+  created_at: string;
+}
+
+export interface PlatformStats {
+  total_users: number;
+  total_organizations: number;
+  total_subscriptions: number;
+  users_by_plan: Record<string, number>;
+  recent_signups: number;
+}
+
+export interface StripePrice {
+  id: string;
+  unit_amount: number | null;
+  currency: string;
+  recurring_interval: string | null;
+  recurring_interval_count: number | null;
+  active: boolean;
+  nickname: string | null;
+  plan_tier: string | null;
+}
+
+export interface StripeProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  default_price_id: string | null;
+  metadata: Record<string, string>;
+  created: number;
+  prices: StripePrice[];
+}
+
+export interface StripeConfig {
+  mode: string;
+  test_key_configured: boolean;
+  live_key_configured: boolean;
+  webhook_secret_configured: boolean;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  plan_tier: 'free' | 'starter' | 'pro' | 'enterprise';
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  active?: boolean;
+}
+
+export interface CreatePriceRequest {
+  product_id: string;
+  unit_amount: number;
+  currency?: string;
+  interval?: 'day' | 'week' | 'month' | 'year';
+  interval_count?: number;
+  nickname?: string;
+  plan_tier: 'free' | 'starter' | 'pro' | 'enterprise';
+}
+
+export interface UpdatePriceRequest {
+  active?: boolean;
+  nickname?: string;
+}
+
+// Admin endpoints (super admin only)
+export const adminApi = {
+  // Platform stats
+  getStats: async (): Promise<PlatformStats> => {
+    return httpClient.get<PlatformStats>('/api/admin/stats');
+  },
+
+  // User management
+  listUsers: async (params?: { skip?: number; limit?: number; search?: string; super_admins_only?: boolean }): Promise<AdminUser[]> => {
+    return httpClient.get<AdminUser[]>('/api/admin/users', params);
+  },
+
+  getUser: async (userId: string): Promise<AdminUser> => {
+    return httpClient.get<AdminUser>(`/api/admin/users/${userId}`);
+  },
+
+  updateUser: async (userId: string, data: { name?: string; is_super_admin?: boolean }): Promise<AdminUser> => {
+    return httpClient.patch<AdminUser>(`/api/admin/users/${userId}`, data);
+  },
+
+  deleteUser: async (userId: string): Promise<{ message: string }> => {
+    return httpClient.delete<{ message: string }>(`/api/admin/users/${userId}`);
+  },
+
+  // Organization management
+  listOrganizations: async (params?: { skip?: number; limit?: number; search?: string; include_personal?: boolean }): Promise<AdminOrganization[]> => {
+    return httpClient.get<AdminOrganization[]>('/api/admin/organizations', params);
+  },
+
+  // Stripe product management
+  getStripeConfig: async (): Promise<StripeConfig> => {
+    return httpClient.get<StripeConfig>('/api/admin/stripe/config');
+  },
+
+  listProducts: async (includeInactive?: boolean): Promise<StripeProduct[]> => {
+    return httpClient.get<StripeProduct[]>('/api/admin/stripe/products', { include_inactive: includeInactive });
+  },
+
+  getProduct: async (productId: string): Promise<StripeProduct> => {
+    return httpClient.get<StripeProduct>(`/api/admin/stripe/products/${productId}`);
+  },
+
+  createProduct: async (data: CreateProductRequest): Promise<StripeProduct> => {
+    return httpClient.post<StripeProduct>('/api/admin/stripe/products', data);
+  },
+
+  updateProduct: async (productId: string, data: UpdateProductRequest): Promise<StripeProduct> => {
+    return httpClient.patch<StripeProduct>(`/api/admin/stripe/products/${productId}`, data);
+  },
+
+  archiveProduct: async (productId: string): Promise<{ message: string; id: string }> => {
+    return httpClient.delete<{ message: string; id: string }>(`/api/admin/stripe/products/${productId}`);
+  },
+
+  createPrice: async (data: CreatePriceRequest): Promise<StripePrice> => {
+    return httpClient.post<StripePrice>('/api/admin/stripe/prices', data);
+  },
+
+  updatePrice: async (priceId: string, data: UpdatePriceRequest): Promise<StripePrice> => {
+    return httpClient.patch<StripePrice>(`/api/admin/stripe/prices/${priceId}`, data);
+  },
+
+  archivePrice: async (priceId: string): Promise<{ message: string; id: string }> => {
+    return httpClient.delete<{ message: string; id: string }>(`/api/admin/stripe/prices/${priceId}`);
+  },
+};
+
 export default api;

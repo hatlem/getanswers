@@ -14,11 +14,38 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.security import encrypt_string, decrypt_string
 from app.models import User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth/smtp", tags=["SMTP Email"])
+
+
+def decrypt_smtp_credentials(encrypted_creds: dict) -> dict:
+    """
+    Decrypt SMTP credentials, returning a copy with decrypted password.
+
+    Args:
+        encrypted_creds: Dictionary with encrypted password field
+
+    Returns:
+        dict: Copy of credentials with decrypted password
+
+    Note:
+        Returns original dict if password is not encrypted or empty.
+    """
+    if not encrypted_creds or not encrypted_creds.get("password"):
+        return encrypted_creds
+
+    decrypted_creds = encrypted_creds.copy()
+    try:
+        decrypted_creds["password"] = decrypt_string(encrypted_creds["password"])
+    except Exception as e:
+        logger.warning(f"Failed to decrypt SMTP password: {e}")
+        # Return as-is if decryption fails (might be legacy unencrypted data)
+
+    return decrypted_creds
 
 
 # Request/Response Schemas
@@ -194,11 +221,10 @@ async def connect_smtp(
             detail=f"SMTP connection failed: {smtp_message}"
         )
 
-    # Store credentials (password should be encrypted in production)
-    # For now, we store it as-is but in production, use proper encryption
+    # Store credentials with encrypted password
     smtp_creds = {
         "email": credentials.email,
-        "password": credentials.password,  # TODO: Encrypt this
+        "password": encrypt_string(credentials.password),
         "imap_server": credentials.imap_server,
         "imap_port": credentials.imap_port,
         "smtp_server": credentials.smtp_server,

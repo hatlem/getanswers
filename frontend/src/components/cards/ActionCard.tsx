@@ -59,16 +59,16 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
       )}
     >
       {/* Header: Risk + Category + Confidence */}
-      <div className="flex items-center justify-between px-5 pt-4 pb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 md:px-5 pt-3 md:pt-4 pb-2 md:pb-3">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
           <span className={cn(
-            'px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider border',
+            'px-2 md:px-2.5 py-0.5 md:py-1 rounded text-[9px] md:text-[10px] font-bold uppercase tracking-wider border',
             riskBadgeStyles[card.riskLevel]
           )}>
             {card.riskLevel} Risk
           </span>
           <span className={cn(
-            'px-2 py-1 rounded text-[10px] font-medium capitalize border',
+            'px-1.5 md:px-2 py-0.5 md:py-1 rounded text-[9px] md:text-[10px] font-medium capitalize border',
             categoryStyles[card.category] || categoryStyles.internal
           )}>
             {card.category}
@@ -78,51 +78,51 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
       </div>
 
       {/* Body: Summary + Proposed Action */}
-      <div className="px-5 pb-4">
-        <h2 className="text-base font-semibold text-text-primary leading-snug mb-3">
+      <div className="px-3 md:px-5 pb-3 md:pb-4">
+        <h2 className="text-sm md:text-base font-semibold text-text-primary leading-snug mb-2 md:mb-3">
           {card.summary}
         </h2>
         <div className={cn(
-          'flex gap-3 p-3 rounded-lg border',
+          'flex gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg border',
           card.isUncertain
             ? 'bg-warning-muted/50 border-warning-border'
             : 'bg-accent-cyan/5 border-accent-cyan/20'
         )}>
           <div className={cn(
-            'w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5',
+            'w-5 h-5 md:w-6 md:h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5',
             card.isUncertain ? 'bg-warning/20' : 'bg-accent-cyan/20'
           )}>
             {card.isUncertain ? (
-              <HelpCircle className="w-3.5 h-3.5 text-warning" />
+              <HelpCircle className="w-3 h-3 md:w-3.5 md:h-3.5 text-warning" />
             ) : (
-              <Zap className="w-3.5 h-3.5 text-accent-cyan" />
+              <Zap className="w-3 h-3 md:w-3.5 md:h-3.5 text-accent-cyan" />
             )}
           </div>
-          <p className="text-sm text-text-secondary leading-relaxed">
+          <p className="text-xs md:text-sm text-text-secondary leading-relaxed">
             {card.proposedAction}
           </p>
         </div>
       </div>
 
       {/* Context: Sender + Related Items */}
-      <div className="px-5 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="px-3 md:px-5 pb-3 md:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="flex items-center gap-2 md:gap-3">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white shrink-0"
+            className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-[10px] md:text-xs font-semibold text-white shrink-0"
             style={{ background: card.sender.avatarColor || 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
           >
             {getInitials(card.sender.name)}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-text-primary truncate">
+            <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+              <span className="text-xs md:text-sm font-medium text-text-primary truncate">
                 {card.sender.name}
               </span>
-              {card.sender.tags.map((tag, i) => (
+              {card.sender.tags.slice(0, 2).map((tag, i) => (
                 <span
                   key={i}
                   className={cn(
-                    'px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide',
+                    'px-1 md:px-1.5 py-0.5 rounded text-[8px] md:text-[9px] font-medium uppercase tracking-wide',
                     tagTypeStyles[tag.type] || tagTypeStyles.custom
                   )}
                 >
@@ -130,16 +130,16 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
                 </span>
               ))}
             </div>
-            <span className="text-xs text-text-muted truncate block">
+            <span className="text-[10px] md:text-xs text-text-muted truncate block">
               {card.sender.organization}
             </span>
           </div>
         </div>
 
         {card.relatedItems.length > 0 && (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="hidden sm:flex items-center gap-2 text-xs">
             <span className="text-text-muted">Related:</span>
-            {card.relatedItems.slice(0, 2).map((item, i) => (
+            {card.relatedItems.slice(0, 2).map((item) => (
               <a
                 key={item.id}
                 href={item.href}
@@ -154,14 +154,14 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
       </div>
 
       {/* Actions */}
-      <div className="px-5 py-3 border-t border-surface-border flex items-center gap-2">
+      <div className="px-3 md:px-5 py-2.5 md:py-3 border-t border-surface-border grid grid-cols-2 md:grid-cols-4 gap-2">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={(e) => handleAction(e, 'approve')}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 hover:border-success/30 transition-all font-medium text-sm"
+          className="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-2.5 rounded-lg bg-success/10 text-success border border-success/20 hover:bg-success/20 hover:border-success/30 transition-all font-medium text-xs md:text-sm"
         >
-          <Check className="w-4 h-4" strokeWidth={2.5} />
+          <Check className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2.5} />
           <span>Approve</span>
         </motion.button>
 
@@ -169,19 +169,19 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={(e) => handleAction(e, 'edit')}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-text-primary hover:border-accent-cyan/30 transition-all font-medium text-sm"
+          className="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-text-primary hover:border-accent-cyan/30 transition-all font-medium text-xs md:text-sm"
         >
-          <Pencil className="w-4 h-4" />
-          <span>Edit Reply</span>
+          <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span>Edit</span>
         </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={(e) => handleAction(e, 'override')}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-critical hover:border-critical/30 transition-all font-medium text-sm"
+          className="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-critical hover:border-critical/30 transition-all font-medium text-xs md:text-sm"
         >
-          <XCircle className="w-4 h-4" />
+          <XCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
           <span>Override</span>
         </motion.button>
 
@@ -189,9 +189,9 @@ export function ActionCard({ card, isSelected, onSelect, onAction, index = 0 }: 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={(e) => handleAction(e, 'escalate')}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-info hover:border-info/30 transition-all font-medium text-sm"
+          className="flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-4 py-2 md:py-2.5 rounded-lg bg-surface-hover text-text-secondary border border-surface-border hover:text-info hover:border-info/30 transition-all font-medium text-xs md:text-sm"
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-3.5 h-3.5 md:w-4 md:h-4" />
           <span>Escalate</span>
         </motion.button>
       </div>

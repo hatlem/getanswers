@@ -136,17 +136,17 @@ export function GmailConnect({
 
   // Card variant
   return (
-    <div className="bg-surface-card border border-surface-border rounded-xl p-6">
+    <div className="bg-surface-card border border-surface-border rounded-xl p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-          <Mail className="w-6 h-6 text-white" />
+      <div className="flex items-start gap-3 md:gap-4 mb-4">
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+          <Mail className="w-5 h-5 md:w-6 md:h-6 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-text-primary mb-1">
+          <h3 className="text-base md:text-lg font-semibold text-text-primary mb-1">
             Gmail Integration
           </h3>
-          <p className="text-sm text-text-secondary">
+          <p className="text-xs md:text-sm text-text-secondary">
             {gmailConnected
               ? 'Your Gmail account is connected and active'
               : 'Connect your Gmail to start managing emails with AI'}

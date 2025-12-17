@@ -1,16 +1,17 @@
 import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader2, Layers } from 'lucide-react';
+import { Loader2, Layers, ShieldX } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireSuperAdmin?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requireSuperAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, checkAuth, user } = useAuthStore();
 
   useEffect(() => {
     // Check authentication status when component mounts
@@ -41,6 +42,33 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Check super admin access
+  if (requireSuperAdmin && !user?.is_super_admin) {
+    return (
+      <div className="h-screen bg-surface-base flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-md px-4"
+        >
+          <div className="w-16 h-16 rounded-xl bg-error/20 flex items-center justify-center mx-auto mb-4">
+            <ShieldX className="w-9 h-9 text-error" />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary mb-2">Access Denied</h2>
+          <p className="text-text-secondary mb-4">
+            This page requires super admin privileges.
+          </p>
+          <a
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent-cyan text-white rounded-lg hover:bg-accent-cyan/90 transition-colors"
+          >
+            Back to Dashboard
+          </a>
+        </motion.div>
+      </div>
+    );
   }
 
   // Render protected content

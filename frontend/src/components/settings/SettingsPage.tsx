@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Settings, User, Bell, Shield, Palette, Database } from 'lucide-react';
+import { Settings, User, Bell, Shield, Palette, Database, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { GmailConnect } from '../auth/GmailConnect';
 import { useAuthStore } from '../../stores/authStore';
 import { Button } from '../ui/Button';
@@ -9,34 +10,34 @@ export function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-surface-base">
-      <div className="max-w-5xl mx-auto p-8">
+      <div className="max-w-5xl mx-auto px-4 py-6 md:p-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 md:mb-8"
         >
-          <h1 className="text-3xl font-bold text-text-primary mb-2">Settings</h1>
-          <p className="text-text-secondary">
+          <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">Settings</h1>
+          <p className="text-sm md:text-base text-text-secondary">
             Manage your account preferences and integrations
           </p>
         </motion.div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-4 md:gap-6">
           {/* Profile Section */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-surface-card border border-surface-border rounded-xl p-6"
+            className="bg-surface-card border border-surface-border rounded-xl p-4 md:p-6"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-accent-cyan/20 flex items-center justify-center">
-                <User className="w-5 h-5 text-accent-cyan" />
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-accent-cyan/20 flex items-center justify-center">
+                <User className="w-4 h-4 md:w-5 md:h-5 text-accent-cyan" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text-primary">Profile</h2>
-                <p className="text-sm text-text-muted">Your account information</p>
+                <h2 className="text-lg md:text-xl font-semibold text-text-primary">Profile</h2>
+                <p className="text-xs md:text-sm text-text-muted">Your account information</p>
               </div>
             </div>
 
@@ -75,20 +76,44 @@ export function SettingsPage() {
             <GmailConnect variant="card" showStatus={true} />
           </motion.section>
 
+          {/* Billing Section */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-surface-card border border-surface-border rounded-xl p-4 md:p-6"
+          >
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-accent-purple/20 flex items-center justify-center">
+                <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-accent-purple" />
+              </div>
+              <div>
+                <h2 className="text-lg md:text-xl font-semibold text-text-primary">Billing & Subscription</h2>
+                <p className="text-xs md:text-sm text-text-muted">Manage your plan and payment method</p>
+              </div>
+            </div>
+
+            <Link to="/billing">
+              <Button variant="outline" className="w-full justify-start">
+                Manage Subscription
+              </Button>
+            </Link>
+          </motion.section>
+
           {/* Notifications Section */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-surface-card border border-surface-border rounded-xl p-6"
+            className="bg-surface-card border border-surface-border rounded-xl p-4 md:p-6"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
-                <Bell className="w-5 h-5 text-warning" />
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-warning/20 flex items-center justify-center">
+                <Bell className="w-4 h-4 md:w-5 md:h-5 text-warning" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text-primary">Notifications</h2>
-                <p className="text-sm text-text-muted">Configure your alert preferences</p>
+                <h2 className="text-lg md:text-xl font-semibold text-text-primary">Notifications</h2>
+                <p className="text-xs md:text-sm text-text-muted">Configure your alert preferences</p>
               </div>
             </div>
 
@@ -119,15 +144,15 @@ export function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-surface-card border border-surface-border rounded-xl p-6"
+            className="bg-surface-card border border-surface-border rounded-xl p-4 md:p-6"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-success" />
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-success/20 flex items-center justify-center">
+                <Shield className="w-4 h-4 md:w-5 md:h-5 text-success" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text-primary">Privacy & Security</h2>
-                <p className="text-sm text-text-muted">Manage your security settings</p>
+                <h2 className="text-lg md:text-xl font-semibold text-text-primary">Privacy & Security</h2>
+                <p className="text-xs md:text-sm text-text-muted">Manage your security settings</p>
               </div>
             </div>
 
@@ -149,9 +174,9 @@ export function SettingsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-surface-card border border-critical/30 rounded-xl p-6"
+            className="bg-surface-card border border-critical/30 rounded-xl p-4 md:p-6"
           >
-            <h2 className="text-xl font-semibold text-critical mb-4">Danger Zone</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-critical mb-4">Danger Zone</h2>
             <div className="space-y-3">
               <Button
                 variant="danger"

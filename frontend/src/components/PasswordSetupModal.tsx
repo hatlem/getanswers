@@ -58,19 +58,19 @@ export function PasswordSetupModal({ onComplete }: PasswordSetupModalProps) {
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-            <Lock className="w-8 h-8 text-white" />
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-6 md:px-6 md:py-8 text-center flex-shrink-0">
+          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-full mb-3 md:mb-4">
+            <Lock className="w-7 h-7 md:w-8 md:h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Secure Your Account</h2>
-          <p className="text-indigo-100">Set a password for future logins</p>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Secure Your Account</h2>
+          <p className="text-sm md:text-base text-indigo-100">Set a password for future logins</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-5 overflow-y-auto flex-1">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
