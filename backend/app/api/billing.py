@@ -92,9 +92,13 @@ async def get_subscription(
             stripe_mode=get_stripe_mode(),
         )
 
+    # Handle both enum and string values (SQLAlchemy may return either)
+    plan_value = subscription.plan.value if hasattr(subscription.plan, 'value') else subscription.plan
+    status_value = subscription.status.value if hasattr(subscription.status, 'value') else subscription.status
+
     return SubscriptionResponse(
-        plan=subscription.plan.value,
-        status=subscription.status.value,
+        plan=plan_value,
+        status=status_value,
         is_active=subscription.is_active,
         current_period_end=subscription.current_period_end,
         cancel_at_period_end=subscription.cancel_at_period_end,
@@ -366,6 +370,8 @@ async def handle_subscription_updated(subscription_data: dict, service: StripeSe
             status=subscription_data["status"],
             current_period_start=subscription_data.get("current_period_start"),
             current_period_end=subscription_data.get("current_period_end"),
+            cancel_at_period_end=subscription_data.get("cancel_at_period_end"),
+            canceled_at=subscription_data.get("canceled_at"),
         )
 
         logger.info(f"Subscription updated: {subscription_id}")

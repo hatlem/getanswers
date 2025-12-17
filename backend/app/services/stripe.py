@@ -199,6 +199,8 @@ class StripeService:
         current_period_end: Optional[int] = None,
         trial_start: Optional[int] = None,
         trial_end: Optional[int] = None,
+        cancel_at_period_end: Optional[bool] = None,
+        canceled_at: Optional[int] = None,
     ) -> Subscription:
         """Create or update subscription from Stripe webhook data."""
         # Map price_id to plan (this would be configured in get-platform)
@@ -223,6 +225,14 @@ class StripeService:
                 subscription.trial_start = datetime.fromtimestamp(trial_start, tz=timezone.utc)
             if trial_end:
                 subscription.trial_end = datetime.fromtimestamp(trial_end, tz=timezone.utc)
+            # Handle cancellation fields
+            if cancel_at_period_end is not None:
+                subscription.cancel_at_period_end = cancel_at_period_end
+            if canceled_at:
+                subscription.canceled_at = datetime.fromtimestamp(canceled_at, tz=timezone.utc)
+            elif cancel_at_period_end is False:
+                # User resubscribed - clear canceled_at
+                subscription.canceled_at = None
         else:
             subscription = Subscription(
                 user_id=user_id,
@@ -267,14 +277,14 @@ class StripeService:
         """
         # These would be configured via environment or get-platform
         price_mapping = {
-            # Test mode
+            # Test mode - GetAnswers prices
+            "price_1Sf5GfEa0arIvkZgrqkuw3JC": PlanTier.STARTER,  # $29/month
+            "price_1Sf5GgEa0arIvkZgrurYHlZ5": PlanTier.PRO,  # $79/month
+            "price_1Sf5GgEa0arIvkZg50suMbMP": PlanTier.ENTERPRISE,  # $299/month
+            # Legacy placeholder IDs (for backwards compatibility)
             "price_starter_test": PlanTier.STARTER,
             "price_pro_test": PlanTier.PRO,
             "price_enterprise_test": PlanTier.ENTERPRISE,
-            # Live mode
-            "price_starter_live": PlanTier.STARTER,
-            "price_pro_live": PlanTier.PRO,
-            "price_enterprise_live": PlanTier.ENTERPRISE,
         }
 
         return price_mapping.get(price_id, PlanTier.STARTER)
