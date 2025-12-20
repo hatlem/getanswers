@@ -6,6 +6,15 @@ import { LeftColumn } from './components/layout/LeftColumn';
 import { CenterColumn } from './components/layout/CenterColumn';
 import { RightColumn } from './components/layout/RightColumn';
 import { LandingPage } from './components/LandingPage';
+import { CompareIndexPage } from './components/compare/CompareIndexPage';
+import { CompareSaneboxPage } from './components/compare/CompareSaneboxPage';
+import { CompareSuperhuman } from './components/compare/CompareSuperhuman';
+import { CompareShortwave } from './components/compare/CompareShortwave';
+import { CompareMailbutler } from './components/compare/CompareMailbutler';
+import { CompareFront } from './components/compare/CompareFront';
+import { CompareSpark } from './components/compare/CompareSpark';
+import { CompareMissive } from './components/compare/CompareMissive';
+import { CompareHelpScout } from './components/compare/CompareHelpScout';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
@@ -237,6 +246,15 @@ function AppContent() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/compare" element={<CompareIndexPage />} />
+        <Route path="/compare/sanebox" element={<CompareSaneboxPage />} />
+        <Route path="/compare/superhuman" element={<CompareSuperhuman />} />
+        <Route path="/compare/shortwave" element={<CompareShortwave />} />
+        <Route path="/compare/mailbutler" element={<CompareMailbutler />} />
+        <Route path="/compare/front" element={<CompareFront />} />
+        <Route path="/compare/spark" element={<CompareSpark />} />
+        <Route path="/compare/missive" element={<CompareMissive />} />
+        <Route path="/compare/helpscout" element={<CompareHelpScout />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/verify" element={<MagicLinkPage />} />
