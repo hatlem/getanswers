@@ -10,6 +10,7 @@ from .policy import Policy
 from .subscription import Subscription, SubscriptionStatus, PlanTier, PLAN_LIMITS, get_plan_limit
 from .feature_flag import FeatureFlag, FeatureName, PLAN_FEATURES, get_default_feature_state
 from .organization import Organization, OrganizationMember, OrganizationInvite, OrganizationRole
+from .lead_magnet import LeadMagnetLead
 
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "OrganizationMember",
     "OrganizationInvite",
     "OrganizationRole",
+    "LeadMagnetLead",
 ]

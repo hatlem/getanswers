@@ -38,6 +38,13 @@ import { SettingsPage } from './components/settings/SettingsPage';
 import { AdminPage } from './components/admin/AdminPage';
 import { FreeToolsPage } from './components/FreeToolsPage';
 import { FreeToolsThankYouPage } from './components/FreeToolsThankYouPage';
+import EmailPromptsPage from './pages/EmailPromptsPage';
+import TriageFrameworkPage from './pages/TriageFrameworkPage';
+import PolicyTemplatePage from './pages/PolicyTemplatePage';
+import TimeCalculatorPage from './pages/TimeCalculatorPage';
+import InboxChecklistPage from './pages/InboxChecklistPage';
+import LeadMagnetThankYouPage from './pages/LeadMagnetThankYouPage';
+import ResponseTimeCalculator from './pages/lead-magnets/ResponseTimeCalculator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
@@ -281,6 +288,15 @@ function AppContent() {
         <Route path="/api/auth/callback/google" element={<GoogleAuthCallbackPage />} />
         <Route path="/free-tools" element={<FreeToolsPage />} />
         <Route path="/free-tools/thank-you" element={<FreeToolsThankYouPage />} />
+
+        {/* Lead Magnet routes */}
+        <Route path="/lead-magnets/email-prompts" element={<EmailPromptsPage />} />
+        <Route path="/lead-magnets/triage-framework" element={<TriageFrameworkPage />} />
+        <Route path="/lead-magnets/policy-template" element={<PolicyTemplatePage />} />
+        <Route path="/lead-magnets/time-calculator" element={<TimeCalculatorPage />} />
+        <Route path="/lead-magnets/inbox-checklist" element={<InboxChecklistPage />} />
+        <Route path="/lead-magnets/response-time-calculator" element={<ResponseTimeCalculator />} />
+        <Route path="/lead-magnets/thank-you" element={<LeadMagnetThankYouPage />} />
 
         {/* Protected routes */}
         <Route
