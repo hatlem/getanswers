@@ -15,6 +15,14 @@ import { CompareFront } from './components/compare/CompareFront';
 import { CompareSpark } from './components/compare/CompareSpark';
 import { CompareMissive } from './components/compare/CompareMissive';
 import { CompareHelpScout } from './components/compare/CompareHelpScout';
+import { CompareBoomerang } from './components/compare/CompareBoomerang';
+import { CompareZohoMail } from './components/compare/CompareZohoMail';
+import { CompareMailbird } from './components/compare/CompareMailbird';
+import { CompareNewtonMail } from './components/compare/CompareNewtonMail';
+import { ComparePolymail } from './components/compare/ComparePolymail';
+import { CompareEmClient } from './components/compare/CompareEmClient';
+import { CompareMailspring } from './components/compare/CompareMailspring';
+import { CompareBlueMail } from './components/compare/CompareBlueMail';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
@@ -28,6 +36,8 @@ import { PasswordSetupModal } from './components/PasswordSetupModal';
 import { BillingPage } from './components/billing/BillingPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { AdminPage } from './components/admin/AdminPage';
+import { FreeToolsPage } from './components/FreeToolsPage';
+import { FreeToolsThankYouPage } from './components/FreeToolsThankYouPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppStore } from './stores/appStore';
 import { queryClient } from './lib/queryClient';
@@ -255,12 +265,22 @@ function AppContent() {
         <Route path="/compare/spark" element={<CompareSpark />} />
         <Route path="/compare/missive" element={<CompareMissive />} />
         <Route path="/compare/helpscout" element={<CompareHelpScout />} />
+        <Route path="/compare/boomerang" element={<CompareBoomerang />} />
+        <Route path="/compare/zoho-mail" element={<CompareZohoMail />} />
+        <Route path="/compare/mailbird" element={<CompareMailbird />} />
+        <Route path="/compare/newton-mail" element={<CompareNewtonMail />} />
+        <Route path="/compare/polymail" element={<ComparePolymail />} />
+        <Route path="/compare/em-client" element={<CompareEmClient />} />
+        <Route path="/compare/mailspring" element={<CompareMailspring />} />
+        <Route path="/compare/bluemail" element={<CompareBlueMail />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/verify" element={<MagicLinkPage />} />
         <Route path="/auth/gmail/callback" element={<GmailCallbackPage />} />
         <Route path="/auth/outlook/callback" element={<OutlookCallbackPage />} />
         <Route path="/api/auth/callback/google" element={<GoogleAuthCallbackPage />} />
+        <Route path="/free-tools" element={<FreeToolsPage />} />
+        <Route path="/free-tools/thank-you" element={<FreeToolsThankYouPage />} />
 
         {/* Protected routes */}
         <Route

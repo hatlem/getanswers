@@ -1,7 +1,8 @@
-import { Zap, ArrowRight, Brain, Users, Mail, Filter, Bot, Inbox } from 'lucide-react';
+import { Zap, ArrowRight, Brain, Users, Mail, Filter, Bot, Inbox, Clock, Monitor, Code, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const competitors = [
+  // Major competitors
   {
     name: 'SaneBox',
     slug: 'sanebox',
@@ -49,6 +50,55 @@ const competitors = [
     slug: 'helpscout',
     description: 'Help desk vs AI-first inbox',
     icon: Mail,
+  },
+  {
+    name: 'Boomerang',
+    slug: 'boomerang',
+    description: 'Email scheduling vs AI responses',
+    icon: Clock,
+  },
+  {
+    name: 'Zoho Mail',
+    slug: 'zoho-mail',
+    description: 'Business email vs AI-first inbox',
+    icon: Mail,
+  },
+  {
+    name: 'Mailbird',
+    slug: 'mailbird',
+    description: 'Desktop client vs AI automation',
+    icon: Monitor,
+  },
+  // Local/smaller competitors
+  {
+    name: 'Newton Mail',
+    slug: 'newton-mail',
+    description: 'Beautiful client vs AI that writes',
+    icon: Smartphone,
+  },
+  {
+    name: 'Polymail',
+    slug: 'polymail',
+    description: 'Sales tracking vs AI responses',
+    icon: Users,
+  },
+  {
+    name: 'eM Client',
+    slug: 'em-client',
+    description: 'Desktop PIM vs AI automation',
+    icon: Monitor,
+  },
+  {
+    name: 'Mailspring',
+    slug: 'mailspring',
+    description: 'Open source vs AI writing',
+    icon: Code,
+  },
+  {
+    name: 'BlueMail',
+    slug: 'bluemail',
+    description: 'Cross-platform vs AI-first inbox',
+    icon: Smartphone,
   },
 ];
 

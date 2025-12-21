@@ -213,7 +213,11 @@ async def handle_stripe_webhook(
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Stripe webhook events."""
-    if not settings.STRIPE_WEBHOOK_SECRET:
+    # Try live webhook secret first, then test webhook secret
+    live_secret = getattr(settings, 'STRIPE_LIVE_WEBHOOK_SECRET', None)
+    test_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', None)
+
+    if not live_secret and not test_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Stripe webhook secret not configured",
@@ -222,16 +226,31 @@ async def handle_stripe_webhook(
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except ValueError as e:
-        logger.error(f"Invalid Stripe webhook payload: {e}")
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.SignatureVerificationError as e:
-        logger.error(f"Invalid Stripe webhook signature: {e}")
-        raise HTTPException(status_code=400, detail="Invalid signature")
+    event = None
+    verified = False
+
+    # Try live secret first if available
+    if live_secret:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, live_secret)
+            verified = True
+        except (ValueError, stripe.SignatureVerificationError):
+            pass  # Will try test secret next
+
+    # Try test secret if live verification failed
+    if not verified and test_secret:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, test_secret)
+            verified = True
+        except ValueError as e:
+            logger.error(f"Invalid Stripe webhook payload: {e}")
+            raise HTTPException(status_code=400, detail="Invalid payload")
+        except stripe.SignatureVerificationError as e:
+            logger.error(f"Invalid Stripe webhook signature: {e}")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+
+    if not verified:
+        raise HTTPException(status_code=500, detail="Webhook verification failed")
 
     service = StripeService(db)
     event_type = event["type"]

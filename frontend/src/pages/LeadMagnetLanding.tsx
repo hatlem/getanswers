@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Inbox, Clock, Zap, Mail, Filter } from "lucide-react";
+import { CheckCircle, Inbox, Clock, Zap, Mail, Filter, Bot, MessageSquare } from "lucide-react";
 
 export default function LeadMagnetLanding() {
   const [email, setEmail] = useState("");
@@ -25,16 +25,20 @@ export default function LeadMagnetLanding() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-block bg-cyan-100 text-cyan-700 px-4 py-1 rounded-full text-sm font-medium mb-4">
-              FREE GUIDE
+              FREE EMAIL AI TOOLKIT
             </span>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              The Ultimate Inbox Zero Guide
+              Email AI Automation Kit
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Master your email inbox with proven strategies to achieve and maintain inbox zero. Save hours every week and reduce stress.
+              Master your email with AI. Get 100+ ready-to-use prompts for email automation plus our complete inbox zero guide.
             </p>
 
             <div className="space-y-4 mb-8">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>100+ email automation AI prompts</span>
+              </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <span>Complete inbox zero methodology</span>
@@ -45,11 +49,7 @@ export default function LeadMagnetLanding() {
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span>Folder structure recommendations</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span>Daily email routine checklist</span>
+                <span>Priority scoring & auto-responses</span>
               </div>
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function LeadMagnetLanding() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">What You'll Learn</h2>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card className="border-2 hover:border-cyan-200 transition-colors">
               <CardHeader>
                 <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-4">

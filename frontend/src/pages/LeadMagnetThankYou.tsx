@@ -14,14 +14,29 @@ export default function LeadMagnetThankYou() {
           </div>
 
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Your Guide is Ready!
+            Your Email AI Toolkit is Ready!
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Download your inbox zero guide below.
+            Download your email automation resources below.
           </p>
 
-          {/* Download Card */}
-          <div className="mb-12">
+          {/* Download Cards */}
+          <div className="grid gap-4 mb-12">
+            <Card className="border-2 border-cyan-200 bg-cyan-50">
+              <CardContent className="flex items-center justify-between p-6">
+                <div className="text-left">
+                  <h3 className="font-semibold text-lg">Email Automation Prompts</h3>
+                  <p className="text-gray-500 text-sm">100+ AI prompts for email triage & responses</p>
+                </div>
+                <a href="/lead-magnets/email-automation-prompts.md" download className="inline-flex">
+                  <Button className="bg-cyan-500 hover:bg-cyan-600">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </a>
+              </CardContent>
+            </Card>
+
             <Card className="border-2 border-green-200">
               <CardContent className="flex items-center justify-between p-6">
                 <div className="text-left">
