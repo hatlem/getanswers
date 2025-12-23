@@ -281,7 +281,7 @@ GMAIL_CLIENT_SECRET=GOCSPX-xxx
 EMAIL_PROVIDER=getmailer
 EMAIL_API_KEY=gm_xxx
 EMAIL_FROM=noreply@getanswers.co
-GETMAILER_URL=https://api.getmailer.io
+GETMAILER_URL=https://api.getmailer.co
 
 # Application
 APP_URL=https://app.getanswers.co

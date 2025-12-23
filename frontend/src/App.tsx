@@ -25,6 +25,7 @@ import { CompareMailspring } from './components/compare/CompareMailspring';
 import { CompareBlueMail } from './components/compare/CompareBlueMail';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
+import OnboardingPage from './pages/OnboardingPage';
 import { MagicLinkPage } from './components/auth/MagicLinkPage';
 import { GmailCallbackPage } from './components/auth/GmailCallbackPage';
 import { OutlookCallbackPage } from './components/auth/OutlookCallbackPage';
@@ -282,6 +283,7 @@ function AppContent() {
         <Route path="/compare/bluemail" element={<CompareBlueMail />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/auth/verify" element={<MagicLinkPage />} />
         <Route path="/auth/gmail/callback" element={<GmailCallbackPage />} />
         <Route path="/auth/outlook/callback" element={<OutlookCallbackPage />} />

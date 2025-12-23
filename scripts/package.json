@@ -1,0 +1,16 @@
+{
+  "name": "getanswers-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "generate-lead-magnets": "npx tsx generate-lead-magnets.ts"
+  },
+  "dependencies": {
+    "marked": "^15.0.0",
+    "puppeteer": "^23.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
