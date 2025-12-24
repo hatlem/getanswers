@@ -12,6 +12,10 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .organization import Organization, OrganizationMember
+    from .user_session import UserSession
+    from .device_history import DeviceHistory
+    from .user_mfa import UserMFA
+    from .usage_metrics import UsageMetrics
 
 
 class AutonomyLevel(str, Enum):
@@ -116,6 +120,29 @@ class User(Base):
         "OrganizationMember",
         back_populates="user",
         foreign_keys="OrganizationMember.user_id",
+        cascade="all, delete-orphan"
+    )
+
+    # Security and compliance relationships
+    sessions: Mapped[list["UserSession"]] = relationship(
+        "UserSession",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    device_history: Mapped[list["DeviceHistory"]] = relationship(
+        "DeviceHistory",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    mfa: Mapped[Optional["UserMFA"]] = relationship(
+        "UserMFA",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    usage_metrics: Mapped[list["UsageMetrics"]] = relationship(
+        "UsageMetrics",
+        back_populates="user",
         cascade="all, delete-orphan"
     )
 
