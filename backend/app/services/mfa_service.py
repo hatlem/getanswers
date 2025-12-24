@@ -5,12 +5,10 @@ from datetime import datetime
 from typing import Optional, Tuple, List
 from uuid import UUID
 import base64
-import io
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.security import encrypt_string, decrypt_string
 from app.core.logging import logger
 from app.models import User, UserMFA, AuditLogEntry, AuditEventType, AuditSeverity

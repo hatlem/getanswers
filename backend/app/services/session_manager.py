@@ -5,11 +5,10 @@ from typing import Optional, Tuple
 from uuid import UUID
 import hashlib
 
-from sqlalchemy import select, func, and_, or_
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from user_agents import parse as parse_user_agent
 
-from app.core.config import settings
 from app.core.logging import logger
 from app.models import User, UserSession, DeviceHistory, TrustLevel, AuditLogEntry, AuditEventType, AuditSeverity
 

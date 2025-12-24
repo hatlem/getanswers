@@ -1,5 +1,5 @@
 """Token blacklist service for server-side session invalidation."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 import redis.asyncio as redis
