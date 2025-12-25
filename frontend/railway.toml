@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-nixpacksConfigPath = "nixpacks.toml"
+nixpacksConfigPath = "frontend/nixpacks.toml"
 
 [deploy]
 numReplicas = 1
