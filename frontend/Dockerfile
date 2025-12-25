@@ -6,17 +6,17 @@ WORKDIR /app
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-# Force cache invalidation: v5-2025-12-25
+# Force cache invalidation: v6-2025-12-25-fix-paths
 RUN echo "Cache bust timestamp: $(date)"
 
-# Copy package files (relative to /frontend root directory)
-COPY package*.json ./
+# Copy package files (relative to repo root since Root Directory is /)
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY frontend/ .
 
 # Build the app
 RUN npm run build
@@ -28,7 +28,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
