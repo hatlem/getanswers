@@ -1,6 +1,6 @@
-export { Input } from './Input';
-export { Button } from './Button';
+export { Input } from './input';
+export { Button } from './button';
 export { Modal } from './Modal';
-export type { InputProps } from './Input';
-export type { ButtonProps } from './Button';
+export type { InputProps } from './input';
+export type { ButtonProps } from './button';
 export type { ModalProps } from './Modal';

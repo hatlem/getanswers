@@ -104,7 +104,7 @@ export default function ResponseTimeCalculator() {
                   min="10"
                   max="200"
                   value={emailsPerDay}
-                  onChange={(e) => setEmailsPerDay(parseInt(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmailsPerDay(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -124,7 +124,7 @@ export default function ResponseTimeCalculator() {
                   max="10"
                   step="0.5"
                   value={avgReadTime}
-                  onChange={(e) => setAvgReadTime(parseFloat(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvgReadTime(parseFloat(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -143,7 +143,7 @@ export default function ResponseTimeCalculator() {
                   min="1"
                   max="30"
                   value={avgResponseTime}
-                  onChange={(e) => setAvgResponseTime(parseInt(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvgResponseTime(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -163,7 +163,7 @@ export default function ResponseTimeCalculator() {
                   max="300"
                   step="5"
                   value={hourlyRate}
-                  onChange={(e) => setHourlyRate(parseInt(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHourlyRate(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -288,13 +288,13 @@ export default function ResponseTimeCalculator() {
                 type="text"
                 placeholder="Your first name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               />
               <Input
                 type="email"
                 placeholder="Your email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
               />
               <Button type="submit" className="w-full" isLoading={isSubmitting}>

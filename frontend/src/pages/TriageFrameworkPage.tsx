@@ -91,7 +91,7 @@ export default function TriageFrameworkPage() {
                     type="text"
                     placeholder="Your first name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                     className="h-12"
                   />
                 </div>
@@ -100,7 +100,7 @@ export default function TriageFrameworkPage() {
                     type="email"
                     placeholder="Your email address"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                     required
                     className="h-12"
                   />
