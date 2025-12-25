@@ -7,5 +7,5 @@ cmds = ["npm ci"]
 [phases.build]
 cmds = ["npm run build"]
 
-[staticAssets]
-directory = "dist"
+[start]
+cmd = "npx serve dist -s -l $PORT"
