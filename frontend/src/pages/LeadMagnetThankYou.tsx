@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Download, ArrowRight, Mail, Bot, Zap, MessageSquare } from "lucide-react";
 

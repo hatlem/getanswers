@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { HomeSEO } from './SEO';
 import {
   Layers,
   Zap,
@@ -551,6 +552,8 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-surface-base text-text-primary overflow-x-hidden">
+      <HomeSEO />
+
       {/* Navigation */}
       <motion.nav
         initial={{ opacity: 0, y: -20 }}

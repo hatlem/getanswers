@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Shield, FileText, Settings, Lock, Users } from "lucide-react";
+import { LeadMagnetSEO } from "@/components/SEO";
 
 export default function PolicyTemplatePage() {
   const [email, setEmail] = useState("");
@@ -42,6 +43,13 @@ export default function PolicyTemplatePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <LeadMagnetSEO
+        title="AI Email Agent Policy Template - Free Download"
+        description="Set clear guardrails for your AI email agent. Define what it can handle autonomously vs. what requires human approval. Free template."
+        slug="policy-template"
+        keywords={['AI email policy', 'email automation rules', 'AI agent guidelines', 'email governance']}
+      />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ListChecks, Trash2, Archive, Star, Calendar } from "lucide-react";
+import { LeadMagnetSEO } from "../components/SEO";
 
 export default function InboxChecklistPage() {
   const [email, setEmail] = useState("");
@@ -42,6 +43,13 @@ export default function InboxChecklistPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white">
+      <LeadMagnetSEO
+        title="30-Day Inbox Zero Checklist - Free Download"
+        description="Follow this proven 30-day system to achieve and maintain inbox zero. Daily tasks, weekly reviews, and accountability tracking included."
+        slug="inbox-checklist"
+        keywords={['inbox zero checklist', '30 day email challenge', 'email management checklist', 'inbox zero guide']}
+      />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FreeToolsSEO } from './SEO';
 
 export function FreeToolsPage() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,8 @@ export function FreeToolsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <FreeToolsSEO />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">

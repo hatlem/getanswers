@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Bot, Zap, Mail, MessageSquare, FileText, Target } from "lucide-react";
+import { LeadMagnetSEO } from "@/components/SEO";
 
 export default function EmailPromptsPage() {
   const [email, setEmail] = useState("");
@@ -43,6 +44,13 @@ export default function EmailPromptsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <LeadMagnetSEO
+        title="50+ AI Email Automation Prompts - Free Download"
+        description="Ready-to-use AI prompts for email triage, responses, and automation. Perfect for inbox zero and AI-powered email management. Free download."
+        slug="email-prompts"
+        keywords={['AI email prompts', 'email automation prompts', 'inbox zero prompts', 'AI email templates']}
+      />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">

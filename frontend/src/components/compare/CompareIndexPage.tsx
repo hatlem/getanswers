@@ -1,5 +1,6 @@
 import { Zap, ArrowRight, Brain, Users, Mail, Filter, Bot, Inbox, Clock, Monitor, Code, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../SEO';
 
 const competitors = [
   // Major competitors
@@ -105,6 +106,34 @@ const competitors = [
 export function CompareIndexPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <SEO
+        title="Email Automation Comparison - GetAnswers vs Competitors"
+        description="Compare GetAnswers with popular email tools like SaneBox, Superhuman, Shortwave, and more. See why teams choose AI-powered email automation over traditional inbox management."
+        canonical="/compare"
+        keywords={[
+          'email automation comparison',
+          'best email tools',
+          'SaneBox alternative',
+          'Superhuman alternative',
+          'AI email comparison',
+          'inbox management tools',
+        ]}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: 'GetAnswers Competitor Comparisons',
+          description: 'Compare GetAnswers AI email automation with traditional email management tools',
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'GetAnswers vs SaneBox', url: 'https://getanswers.co/compare/sanebox' },
+              { '@type': 'ListItem', position: 2, name: 'GetAnswers vs Superhuman', url: 'https://getanswers.co/compare/superhuman' },
+              { '@type': 'ListItem', position: 3, name: 'GetAnswers vs Shortwave', url: 'https://getanswers.co/compare/shortwave' },
+            ],
+          },
+        }}
+      />
+
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10" />

@@ -1,0 +1,36 @@
+# GetAnswers Robots.txt
+# https://getanswers.co
+
+User-agent: *
+Allow: /
+
+# Public Marketing Pages
+Allow: /
+Allow: /compare
+Allow: /compare/*
+Allow: /free-tools
+Allow: /lead-magnets/*
+
+# Disallow Protected Routes
+Disallow: /dashboard
+Disallow: /billing
+Disallow: /settings
+Disallow: /admin
+Disallow: /register
+Disallow: /login
+Disallow: /callback
+Disallow: /onboarding
+
+# Disallow Thank You Pages (noindex)
+Disallow: /free-tools/thank-you
+Disallow: /lead-magnets/thank-you
+
+# Disallow API and Assets
+Disallow: /api/
+Disallow: /*.json$
+
+# Crawl Delay (seconds)
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://getanswers.co/sitemap.xml

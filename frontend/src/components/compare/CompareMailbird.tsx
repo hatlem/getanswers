@@ -1,5 +1,6 @@
 import { Check, X, Zap, Target, ArrowRight, Star, Inbox, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ComparisonSEO } from '../SEO';
 
 const features = [
   { name: 'AI-Generated Replies', getanswers: true, competitor: 'partial' },
@@ -76,9 +77,15 @@ const renderFeatureValue = (value: boolean | string) => {
   return <X className="w-5 h-5 text-gray-500" />;
 };
 
-export function CompareSpark() {
+export function CompareMailbird() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <ComparisonSEO
+        competitor="Mailbird"
+        competitorDescription="Mailbird is a desktop email client. GetAnswers is AI that writes your email responses for you."
+        slug="mailbird"
+      />
+
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10" />

@@ -1,5 +1,6 @@
 import { Check, X, Zap, Target, ArrowRight, Star, Bot, Smartphone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ComparisonSEO } from '../SEO';
 
 const features = [
   { name: 'AI-Generated Replies', getanswers: true, competitor: false },
@@ -61,6 +62,12 @@ const renderFeatureValue = (value: boolean | string) => {
 export function CompareBlueMail() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <ComparisonSEO
+        competitor="BlueMail"
+        competitorDescription="BlueMail unifies your inboxes. GetAnswers writes your email responses using AI across all your accounts."
+        slug="bluemail"
+      />
+
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10" />
         <div className="max-w-6xl mx-auto text-center relative">

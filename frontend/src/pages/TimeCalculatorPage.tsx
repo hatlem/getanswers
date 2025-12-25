@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, TrendingDown, DollarSign, BarChart3, Calculator } from "lucide-react";
+import { LeadMagnetSEO } from "../components/SEO";
 
 export default function TimeCalculatorPage() {
   const [email, setEmail] = useState("");
@@ -42,6 +43,13 @@ export default function TimeCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <LeadMagnetSEO
+        title="Email Response Time Calculator - Free ROI Tool"
+        description="Calculate exactly how much time you're spending on email and what AI automation could save you. Free interactive spreadsheet included."
+        slug="time-calculator"
+        keywords={['email time calculator', 'email ROI calculator', 'email automation savings', 'productivity calculator']}
+      />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">

@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Download, ArrowRight, Mail, Bot, Zap, MessageSquare } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const LEAD_MAGNET_CONFIG: Record<string, {
   title: string;
@@ -75,6 +76,13 @@ export default function LeadMagnetThankYouPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+      <SEO
+        title={`Download ${config.title} - GetAnswers`}
+        description={`Your free ${config.title} is ready to download. ${config.description}. Get started with AI-powered email automation.`}
+        canonical="/lead-magnets/thank-you"
+        noindex={true}
+      />
+
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-2xl mx-auto text-center">
           {/* Success Icon */}

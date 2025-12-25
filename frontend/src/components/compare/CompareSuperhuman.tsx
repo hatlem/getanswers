@@ -1,5 +1,6 @@
 import { Check, X, Zap, Target, ArrowRight, Star, Gauge, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ComparisonSEO } from '../SEO';
 
 const features = [
   { name: 'AI-Generated Replies', getanswers: true, competitor: false },
@@ -79,6 +80,11 @@ const renderFeatureValue = (value: boolean | string) => {
 export function CompareSuperhuman() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <ComparisonSEO
+        competitor="Superhuman"
+        competitorDescription="Superhuman makes you faster at writing emails. GetAnswers means you barely write emails at all - AI drafts them, you approve."
+        slug="superhuman"
+      />
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10" />

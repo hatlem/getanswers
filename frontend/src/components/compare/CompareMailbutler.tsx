@@ -1,5 +1,6 @@
 import { Check, X, Zap, Target, ArrowRight, Star, Wrench, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ComparisonSEO } from '../SEO';
 
 const features = [
   { name: 'AI-Generated Replies', getanswers: true, competitor: 'partial' },
@@ -79,6 +80,12 @@ const renderFeatureValue = (value: boolean | string) => {
 export function CompareMailbutler() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      <ComparisonSEO
+        competitor="Mailbutler"
+        competitorDescription="Mailbutler adds email tools. GetAnswers adds AI intelligence that writes your responses for you."
+        slug="mailbutler"
+      />
+
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-blue-500/10" />

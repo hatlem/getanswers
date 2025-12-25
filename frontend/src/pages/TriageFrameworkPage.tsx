@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Filter, Clock, AlertCircle, Archive, Trash2, Flag } from "lucide-react";
+import { LeadMagnetSEO } from "@/components/SEO";
 
 export default function TriageFrameworkPage() {
   const [email, setEmail] = useState("");
@@ -42,6 +43,13 @@ export default function TriageFrameworkPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+      <LeadMagnetSEO
+        title="Email Triage Decision Framework - Free Download"
+        description="The exact 4-step framework top executives use to process 200+ emails per day in under 30 minutes. Free decision matrix included."
+        slug="triage-framework"
+        keywords={['email triage', 'inbox management', 'email decision framework', 'email productivity']}
+      />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-12 items-center">
