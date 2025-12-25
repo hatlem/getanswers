@@ -3,7 +3,7 @@ import { Settings, User, Bell, Shield, Palette, Database, CreditCard } from 'luc
 import { Link } from 'react-router-dom';
 import { GmailConnect } from '../auth/GmailConnect';
 import { useAuthStore } from '../../stores/authStore';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 
 export function SettingsPage() {
   const { user, logout } = useAuthStore();

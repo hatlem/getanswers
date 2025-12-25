@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../lib/api';
 

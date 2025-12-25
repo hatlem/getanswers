@@ -16,7 +16,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { billingApi, type SubscriptionInfo } from '../../lib/api';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
 // Plan info for display only - actual plan changes happen in Stripe Portal

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, CheckCircle2, AlertCircle, Loader2, Link as LinkIcon, Unlink } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 interface GmailConnectProps {

@@ -20,7 +20,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { adminApi, type StripeProduct, type StripePrice, type PlatformStats, type StripeConfig } from '../../lib/api';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
 type TabId = 'overview' | 'products' | 'users';

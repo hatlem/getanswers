@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Sparkles, Loader2, CheckCircle2, XCircle, ArrowRight, Layers } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 type ViewState = 'request' | 'verifying' | 'success' | 'error' | 'sent';
