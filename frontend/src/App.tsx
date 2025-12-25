@@ -15,8 +15,8 @@ import { CompareFront } from './components/compare/CompareFront';
 import { CompareSpark } from './components/compare/CompareSpark';
 import { CompareMissive } from './components/compare/CompareMissive';
 import { CompareHelpScout } from './components/compare/CompareHelpScout';
-import { CompareBoomerang } from './components/compare/CompareBoomerang';
-import { CompareZohoMail } from './components/compare/CompareZohoMail';
+import { CompareBoomerangPage } from './components/compare/CompareBoomerang';
+import { CompareZohoMailPage } from './components/compare/CompareZohoMail';
 import { CompareMailbird } from './components/compare/CompareMailbird';
 import { CompareNewtonMail } from './components/compare/CompareNewtonMail';
 import { ComparePolymail } from './components/compare/ComparePolymail';
@@ -273,8 +273,8 @@ function AppContent() {
         <Route path="/compare/spark" element={<CompareSpark />} />
         <Route path="/compare/missive" element={<CompareMissive />} />
         <Route path="/compare/helpscout" element={<CompareHelpScout />} />
-        <Route path="/compare/boomerang" element={<CompareBoomerang />} />
-        <Route path="/compare/zoho-mail" element={<CompareZohoMail />} />
+        <Route path="/compare/boomerang" element={<CompareBoomerangPage />} />
+        <Route path="/compare/zoho-mail" element={<CompareZohoMailPage />} />
         <Route path="/compare/mailbird" element={<CompareMailbird />} />
         <Route path="/compare/newton-mail" element={<CompareNewtonMail />} />
         <Route path="/compare/polymail" element={<ComparePolymail />} />

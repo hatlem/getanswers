@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { CheckCircle, Clock, TrendingDown, DollarSign, BarChart3, Calculator } from "lucide-react";
 
 export default function TimeCalculatorPage() {

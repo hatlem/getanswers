@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
 import { CheckCircle, Download, ArrowRight, Mail, Bot, Zap, MessageSquare } from "lucide-react";
 
 export default function LeadMagnetThankYou() {
