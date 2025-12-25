@@ -1,6 +1,6 @@
 [build]
-builder = "NIXPACKS"
-nixpacksConfigPath = "frontend/nixpacks.toml"
+builder = "DOCKERFILE"
+dockerfilePath = "frontend/Dockerfile"
 
 [deploy]
 numReplicas = 1
