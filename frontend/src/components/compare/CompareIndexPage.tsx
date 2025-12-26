@@ -2,13 +2,38 @@ import { Zap, ArrowRight, Brain, Users, Mail, Filter, Bot, Inbox, Clock, Monitor
 import { Link } from 'react-router-dom';
 
 const competitors = [
-  // Major competitors
+  // AI-Powered Email Response Competitors (MOST DIRECT)
   {
-    name: 'SaneBox',
-    slug: 'sanebox',
-    description: 'Email filtering vs AI email agent',
-    icon: Filter,
+    name: 'Ellie',
+    slug: 'ellie',
+    description: 'AI replies vs full email management',
+    icon: Brain,
   },
+  {
+    name: 'Addy AI',
+    slug: 'addy-ai',
+    description: 'Email assistant vs email agent',
+    icon: Brain,
+  },
+  {
+    name: 'Compose AI',
+    slug: 'compose-ai',
+    description: 'Autocomplete vs complete responses',
+    icon: Bot,
+  },
+  {
+    name: 'Ready to Send',
+    slug: 'ready-to-send',
+    description: 'Gmail add-on vs full platform',
+    icon: Bot,
+  },
+  {
+    name: 'Lavender',
+    slug: 'lavender',
+    description: 'Sales coaching vs email automation',
+    icon: Brain,
+  },
+  // Major Email Tools & Platforms
   {
     name: 'Superhuman',
     slug: 'superhuman',
@@ -16,10 +41,28 @@ const competitors = [
     icon: Zap,
   },
   {
+    name: 'SaneBox',
+    slug: 'sanebox',
+    description: 'Email filtering vs AI email agent',
+    icon: Filter,
+  },
+  {
     name: 'Shortwave',
     slug: 'shortwave',
     description: 'AI summaries vs AI responses',
     icon: Bot,
+  },
+  {
+    name: 'Hey.com',
+    slug: 'hey',
+    description: 'Workflow optimization vs AI automation',
+    icon: Zap,
+  },
+  {
+    name: 'Canary Mail',
+    slug: 'canary-mail',
+    description: 'Privacy client vs AI platform',
+    icon: Smartphone,
   },
   {
     name: 'Mailbutler',
@@ -69,7 +112,7 @@ const competitors = [
     description: 'Desktop client vs AI automation',
     icon: Monitor,
   },
-  // Local/smaller competitors
+  // Additional Email Clients
   {
     name: 'Newton Mail',
     slug: 'newton-mail',
