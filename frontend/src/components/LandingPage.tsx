@@ -641,11 +641,32 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed"
+            className="text-xl md:text-2xl text-text-secondary max-w-2xl mx-auto mb-6 leading-relaxed"
           >
-            GetAnswers uses AI to triage, categorize, and handle your emails automatically.
-            You only see what truly needs your attention.
+            Other tools help you organize email. GetAnswers <span className="text-accent-cyan font-semibold">actually writes your responses</span>.
+            AI drafts complete replies—you just approve, edit, or escalate.
           </motion.p>
+
+          {/* Competitive badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-wrap items-center justify-center gap-3 mb-12"
+          >
+            <div className="text-sm text-text-muted">
+              More than:
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-surface-card/50 border border-surface-border/50 text-xs text-text-secondary">
+              Superhuman's Speed
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-surface-card/50 border border-surface-border/50 text-xs text-text-secondary">
+              SaneBox's Filtering
+            </div>
+            <div className="px-3 py-1.5 rounded-full bg-surface-card/50 border border-surface-border/50 text-xs text-text-secondary">
+              Compose AI's Autocomplete
+            </div>
+          </motion.div>
 
           {/* Email signup form */}
           <motion.div
@@ -811,6 +832,115 @@ export function LandingPage() {
             {features.map((feature, index) => (
               <FeatureCard key={feature.title} {...feature} index={index} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Competitive Comparison Section */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-b from-surface-base to-surface-card/30">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 md:mb-16"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6">
+              Not Just Another Email Tool
+            </h2>
+            <p className="text-base md:text-xl text-text-secondary max-w-3xl mx-auto mb-8">
+              Most email tools help you read or organize faster. GetAnswers is an <span className="text-accent-cyan font-semibold">AI email agent</span> that actually writes for you.
+            </p>
+            <Link
+              to="/compare"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-surface-card border border-surface-border text-text-primary hover:border-accent-cyan/50 transition-all group"
+            >
+              <span>See Detailed Comparisons</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="p-6 rounded-xl bg-surface-card border border-surface-border"
+            >
+              <div className="text-text-muted text-sm font-medium mb-3">Email Clients</div>
+              <div className="text-text-secondary text-xs mb-4">Superhuman, Hey.com, Canary Mail</div>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-start gap-2 text-sm text-text-secondary">
+                  <CheckCircle2 className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                  <span>Fast interface</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-secondary">
+                  <CheckCircle2 className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                  <span>Keyboard shortcuts</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-muted line-through">
+                  <X className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>AI writes responses</span>
+                </div>
+              </div>
+              <div className="text-xs text-text-muted">You still write every email</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="p-6 rounded-xl bg-surface-card border border-surface-border"
+            >
+              <div className="text-text-muted text-sm font-medium mb-3">AI Assistants</div>
+              <div className="text-text-secondary text-xs mb-4">Ellie, Addy AI, Compose AI</div>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-start gap-2 text-sm text-text-secondary">
+                  <CheckCircle2 className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                  <span>AI suggestions</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-secondary">
+                  <CheckCircle2 className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                  <span>Autocomplete</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-muted line-through">
+                  <X className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>Autonomous handling</span>
+                </div>
+              </div>
+              <div className="text-xs text-text-muted">Manual workflow, no approval queue</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="p-6 rounded-xl bg-gradient-to-br from-accent-cyan/10 to-accent-purple/10 border-2 border-accent-cyan/30"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Brain className="w-5 h-5 text-accent-cyan" />
+                <div className="text-accent-cyan text-sm font-semibold">GetAnswers</div>
+              </div>
+              <div className="text-text-secondary text-xs mb-4">AI-First Email Agent</div>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-start gap-2 text-sm text-text-primary">
+                  <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                  <span>Complete AI responses</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-primary">
+                  <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                  <span>Approval queue</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-text-primary">
+                  <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                  <span>80%+ autonomous</span>
+                </div>
+              </div>
+              <div className="text-xs text-accent-cyan font-medium">AI does the work. You approve.</div>
+            </motion.div>
           </div>
         </div>
       </section>
