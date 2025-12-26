@@ -75,6 +75,9 @@ class User(Base):
     # Password setup needed (for users who registered via quick signup with auto-generated password)
     needs_password_setup: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Writing style profile (cached JSON from WritingStyleService)
+    writing_style_profile: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(

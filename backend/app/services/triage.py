@@ -28,6 +28,7 @@ from ..models.agent_action import AgentAction, ActionType, RiskLevel, ActionStat
 from ..models.policy import Policy
 from .agent import AgentService, EmailAnalysis, DraftResponse
 from .gmail import GmailService, GmailServiceError
+from .writing_style import WritingStyleService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -183,7 +184,8 @@ class TriageService:
         self,
         db: AsyncSession,
         gmail_service: GmailService,
-        agent_service: AgentService
+        agent_service: AgentService,
+        writing_style_service: Optional[WritingStyleService] = None
     ):
         """
         Initialize the triage service.
@@ -192,10 +194,12 @@ class TriageService:
             db: Database session
             gmail_service: Gmail API service for fetching/sending emails
             agent_service: AI agent service for analysis and response generation
+            writing_style_service: Optional writing style learning service
         """
         self.db = db
         self.gmail = gmail_service
         self.agent = agent_service
+        self.writing_style = writing_style_service
         logger.info("TriageService initialized")
 
     # =========================================================================
@@ -298,13 +302,31 @@ class TriageService:
 
             # Step 8: Generate response draft
             logger.info(f"Generating response draft for message {message.id}")
+
+            # Get personalized writing style preferences if available
+            user_preferences = None
+            if self.writing_style and user.writing_style_profile:
+                try:
+                    import json
+                    profile = json.loads(user.writing_style_profile)
+                    user_preferences = {
+                        "communication_tone": profile.get("overall_tone", "professional"),
+                        "response_length": "concise" if profile.get("prefers_concise", True) else "detailed",
+                        "formality_level": profile.get("formality_level", 3),
+                        "uses_bullet_points": profile.get("uses_bullet_points", False),
+                        "common_greetings": profile.get("common_greetings", []),
+                        "common_closings": profile.get("common_closings", []),
+                    }
+                except Exception as e:
+                    logger.warning(f"Failed to load writing style profile for user {user.id}: {e}")
+
             draft = await self.agent.generate_response(
                 message=message,
                 conversation_context=context_messages,
                 analysis=analysis,
                 user_email=user.email,
                 user_name=user.name,
-                user_preferences=None
+                user_preferences=user_preferences
             )
 
             # Step 9: Assess risk
