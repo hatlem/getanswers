@@ -1,6 +1,21 @@
-# GetAnswers - Agent-First Mailbox
+# GetAnswers - AI Email Agent
 
-> Mission Control for your inbox. An AI agent handles routine emails autonomously, surfacing only high-risk or low-confidence decisions for human review.
+> **Other tools help you organize email. GetAnswers actually writes your responses.**
+>
+> An AI agent that drafts complete email replies in your voice. You just approve, edit, or escalate. 80%+ of emails handled autonomously, saving you 2+ hours daily.
+
+## What Makes GetAnswers Different
+
+Unlike traditional email clients (Superhuman, Hey.com) or AI assistants (Ellie, Compose AI), GetAnswers is a **complete AI email agent** with:
+
+- ✅ **Complete AI Response Generation** - Not just suggestions or autocomplete
+- ✅ **Approval Queue Workflow** - One-click approve/edit/escalate
+- ✅ **Confidence Scoring** - AI tells you how certain it is (0-100%)
+- ✅ **Risk Assessment** - Automatic categorization (low/medium/high)
+- ✅ **Autonomous Handling** - 80%+ of emails sent without manual work
+- ✅ **Complete Audit Trail** - Full history of AI actions
+
+**See detailed comparisons**: [GetAnswers vs Competitors](/compare)
 
 ## Architecture
 

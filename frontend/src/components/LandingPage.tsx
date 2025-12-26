@@ -477,33 +477,33 @@ export function LandingPage() {
   const features = [
     {
       icon: Brain,
-      title: 'AI-Powered Triage',
-      description: 'Smart categorization that learns your preferences. Handle routine items automatically while escalating what matters.',
+      title: 'Complete AI Responses',
+      description: 'AI drafts full email replies in your voice, not just suggestions. Goes beyond autocomplete or smart replies—complete contextual responses ready to send.',
     },
     {
       icon: Shield,
-      title: 'Policy-Based Control',
-      description: 'Define rules for how different types of messages should be handled. Full transparency into every AI decision.',
+      title: 'Approval Queue Workflow',
+      description: 'Human-in-the-loop by design. Review AI decisions with confidence scoring and risk assessment. One-click approve, edit, or escalate—unlike tools where you still write every email.',
     },
     {
       icon: Zap,
-      title: 'Instant Actions',
-      description: 'One-click approve, override, or escalate. Batch operations for power users. Keyboard shortcuts for everything.',
+      title: '80% Autonomous Handling',
+      description: 'AI handles routine emails automatically with your pre-approved settings. Only surfaces high-risk or low-confidence items for review. Save 2+ hours daily.',
     },
     {
       icon: Clock,
-      title: 'Time Reclaimed',
-      description: 'Average users save 2+ hours daily. Focus on strategic work while AI handles the routine.',
+      title: 'Confidence Scoring',
+      description: 'AI tells you how certain it is (0-100%). Know which emails to review carefully and which to approve instantly. No other tool offers this transparency.',
     },
     {
       icon: Mail,
-      title: 'Email Integration',
-      description: 'Connect Gmail, Outlook, and more. Unified inbox for all your communications in one mission control.',
+      title: 'Multi-Provider Support',
+      description: 'Works with Gmail, Outlook, and custom SMTP. Not locked to one provider like Hey.com. All your email accounts in one AI-powered platform.',
     },
     {
       icon: Target,
-      title: 'Objective Tracking',
-      description: 'Group related messages by project or goal. See progress at a glance and never lose context.',
+      title: 'Complete Audit Trail',
+      description: 'Full history of every AI action—what was approved, edited, or rejected. Track efficiency gains and maintain oversight. Essential for professional use.',
     },
   ];
 
@@ -569,6 +569,7 @@ export function LandingPage() {
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-text-secondary hover:text-text-primary transition-colors">Features</a>
             <a href="#how-it-works" className="text-text-secondary hover:text-text-primary transition-colors">How it Works</a>
+            <Link to="/compare" className="text-text-secondary hover:text-text-primary transition-colors">Compare</Link>
             <a href="#pricing" className="text-text-secondary hover:text-text-primary transition-colors">Pricing</a>
           </div>
 
