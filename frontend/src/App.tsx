@@ -44,6 +44,7 @@ import { PasswordSetupModal } from './components/PasswordSetupModal';
 import { BillingPage } from './components/billing/BillingPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { AdminPage } from './components/admin/AdminPage';
+import { AILearningPage } from './components/ai-learning/AILearningPage';
 import { FreeToolsPage } from './components/FreeToolsPage';
 import { FreeToolsThankYouPage } from './components/FreeToolsThankYouPage';
 import EmailPromptsPage from './pages/EmailPromptsPage';
@@ -336,6 +337,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-learning"
+          element={
+            <ProtectedRoute>
+              <AILearningPage />
             </ProtectedRoute>
           }
         />

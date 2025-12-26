@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core.database import close_db
 from app.core.exceptions import AppException
 from app.core.logging import setup_logging, log_request, log_error
-from app.api import auth, queue, gmail, outlook, smtp, stats, conversations, billing, admin, organizations, lead_magnets
+from app.api import auth, queue, gmail, outlook, smtp, stats, conversations, billing, admin, organizations, lead_magnets, ai_learning
 from app.api.platform import leads as platform_leads
 
 # Initialize logging
@@ -274,6 +274,7 @@ app.include_router(organizations.router, prefix="/api/organizations", tags=["Org
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin (Super Admin Only)"])
 app.include_router(lead_magnets.router, prefix="/api/lead-magnets", tags=["Lead Magnets"])
 app.include_router(platform_leads.router, prefix="/api/platform", tags=["Platform Leads"])
+app.include_router(ai_learning.router, prefix="/api/ai-learning", tags=["AI Learning"])
 
 
 @app.get("/")
