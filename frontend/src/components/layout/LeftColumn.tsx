@@ -8,7 +8,9 @@ import {
   Settings,
   MessageSquare,
   X,
+  Brain,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { NavItemSkeleton, StatsSkeleton } from '../ui/Skeleton';
 import { useAppStore } from '../../stores/appStore';
@@ -118,18 +120,25 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
     },
   ];
 
-  const systemItems: NavItem[] = [
+  const systemLinks = [
     {
-      id: 'handled',
-      label: 'Policy Editor',
-      icon: <Settings className="w-[18px] h-[18px]" />,
-      variant: 'default',
+      to: '/ai-learning',
+      label: 'AI Learning',
+      icon: <Brain className="w-[18px] h-[18px]" />,
+      variant: 'default' as const,
+      badge: 'New',
     },
     {
-      id: 'handled',
+      to: '#',
+      label: 'Policy Editor',
+      icon: <Settings className="w-[18px] h-[18px]" />,
+      variant: 'default' as const,
+    },
+    {
+      to: '#',
       label: 'Raw Messages',
       icon: <MessageSquare className="w-[18px] h-[18px]" />,
-      variant: 'default',
+      variant: 'default' as const,
       badge: 'Advanced',
     },
   ];
@@ -179,6 +188,37 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
     );
   };
 
+  const renderSystemLink = (item: typeof systemLinks[0], index: number) => {
+    const styles = variantStyles[item.variant];
+
+    return (
+      <motion.li
+        key={item.label}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.2, delay: index * 0.05 }}
+      >
+        <Link
+          to={item.to}
+          onClick={() => closeMobileDrawers()}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent transition-all group hover:bg-surface-hover hover:border-surface-border"
+        >
+          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', styles.iconBg)}>
+            <span className={styles.icon}>{item.icon}</span>
+          </div>
+          <span className="flex-1 text-left text-sm transition-colors text-text-secondary group-hover:text-text-primary">
+            {item.label}
+          </span>
+          {item.badge && (
+            <span className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider text-accent-cyan bg-accent-cyan/10">
+              {item.badge}
+            </span>
+          )}
+        </Link>
+      </motion.li>
+    );
+  };
+
   // Sidebar content - shared between desktop and mobile
   const sidebarContent = (
     <>
@@ -209,7 +249,7 @@ export function LeftColumn({ counts, stats, activeView, onViewChange }: LeftColu
             System
           </h3>
           <ul className="space-y-1">
-            {systemItems.map((item, i) => renderNavItem(item, i + activeMissions.length + auditViews.length))}
+            {systemLinks.map((item, i) => renderSystemLink(item, i + activeMissions.length + auditViews.length))}
           </ul>
         </div>
       </nav>

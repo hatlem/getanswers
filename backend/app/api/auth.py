@@ -700,10 +700,24 @@ async def complete_onboarding(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Mark the user's onboarding as complete."""
+    """Mark the user's onboarding as complete.
+
+    Triggers initial AI learning analysis after onboarding if user has sent 3+ emails.
+    """
     current_user.onboarding_completed = request.completed
     await db.commit()
     logger.info(f"User {current_user.email} onboarding marked as {'complete' if request.completed else 'incomplete'}")
+
+    # Trigger initial AI learning analysis after onboarding complete
+    if request.completed:
+        try:
+            from app.workers.tasks.ai_learning import initial_writing_analysis_for_new_user_task
+            initial_writing_analysis_for_new_user_task.delay(str(current_user.id))
+            logger.info(f"Queued initial AI learning analysis for user {current_user.id}")
+        except Exception as e:
+            # Don't fail onboarding if learning task fails to queue
+            logger.warning(f"Failed to queue AI learning analysis for user {current_user.id}: {e}")
+
     return MessageResponse(message="Onboarding status updated")
 
 

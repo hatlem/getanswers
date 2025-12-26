@@ -18,12 +18,14 @@ import {
   DollarSign,
   Package,
   Tag,
+  Brain,
+  TrendingUp,
 } from 'lucide-react';
 import { adminApi, type StripeProduct, type StripePrice, type PlatformStats, type StripeConfig } from '../../lib/api';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
-type TabId = 'overview' | 'products' | 'users';
+type TabId = 'overview' | 'products' | 'users' | 'ai-learning';
 
 const planTierColors: Record<string, string> = {
   free: 'text-text-secondary bg-surface-border',
@@ -58,6 +60,7 @@ export function AdminPage() {
     { id: 'overview' as TabId, label: 'Overview', icon: BarChart3 },
     { id: 'products' as TabId, label: 'Stripe Products', icon: Package },
     { id: 'users' as TabId, label: 'Users', icon: Users },
+    { id: 'ai-learning' as TabId, label: 'AI Learning', icon: Brain },
   ];
 
   return (
@@ -145,6 +148,10 @@ export function AdminPage() {
 
         {activeTab === 'users' && (
           <UsersTab />
+        )}
+
+        {activeTab === 'ai-learning' && (
+          <AILearningTab />
         )}
       </div>
     </div>
@@ -713,6 +720,209 @@ function UsersTab() {
             ))}
           </tbody>
         </table>
+      </div>
+    </motion.div>
+  );
+}
+
+// AI Learning Tab
+function AILearningTab() {
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ['admin-ai-learning-overview'],
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/admin/ai-learning/overview`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch overview');
+      return response.json();
+    },
+  });
+
+  const { data: performance, isLoading: performanceLoading } = useQuery({
+    queryKey: ['admin-ai-learning-performance'],
+    queryFn: async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/admin/ai-learning/system-performance`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch performance');
+      return response.json();
+    },
+  });
+
+  if (overviewLoading || performanceLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-6 h-6 animate-spin text-accent-cyan" />
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Header */}
+      <div>
+        <h2 className="text-lg font-semibold text-text-primary mb-1">AI Learning Analytics</h2>
+        <p className="text-sm text-text-secondary">Monitor AI learning adoption, quality, and costs</p>
+      </div>
+
+      {/* Adoption Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          label="Profile Coverage"
+          value={`${overview?.profile_coverage_percent?.toFixed(1) || 0}%`}
+          icon={Brain}
+          color="text-accent-cyan"
+        />
+        <StatCard
+          label="Avg Confidence"
+          value={`${Math.round((overview?.avg_profile_confidence || 0) * 100)}%`}
+          icon={TrendingUp}
+          color="text-success"
+        />
+        <StatCard
+          label="Total Edits"
+          value={overview?.total_edits_all_time || 0}
+          icon={Users}
+          color="text-accent-purple"
+        />
+        <StatCard
+          label="Monthly Cost"
+          value={`$${performance?.estimated_monthly_cost_usd?.toFixed(2) || '0.00'}`}
+          icon={DollarSign}
+          color="text-warning"
+        />
+      </div>
+
+      {/* Detailed Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Profile Stats */}
+        <div className="bg-surface-card border border-surface-border rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-text-primary mb-4">Profile Statistics</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Users with Profiles</span>
+              <span className="text-sm font-medium text-text-primary">
+                {overview?.users_with_profiles || 0} / {overview?.total_users || 0}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Avg Sample Size</span>
+              <span className="text-sm font-medium text-text-primary">
+                {Math.round(overview?.avg_sample_size || 0)} emails
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Stale Profiles</span>
+              <span className="text-sm font-medium text-warning">
+                {overview?.stale_profiles_count || 0}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Need Analysis</span>
+              <span className="text-sm font-medium text-info">
+                {overview?.users_needing_analysis || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Performance Stats */}
+        <div className="bg-surface-card border border-surface-border rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-text-primary mb-4">Performance Metrics</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Analyses (7 days)</span>
+              <span className="text-sm font-medium text-text-primary">
+                {performance?.analyses_last_7_days || 0}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Analyses (30 days)</span>
+              <span className="text-sm font-medium text-text-primary">
+                {performance?.analyses_last_30_days || 0}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Success Rate</span>
+              <span className="text-sm font-medium text-success">
+                {performance?.success_rate_percent?.toFixed(1) || 0}%
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-text-secondary">Avg Duration</span>
+              <span className="text-sm font-medium text-text-primary">
+                {performance?.avg_analysis_duration_seconds?.toFixed(1) || 0}s
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Insights */}
+      <div className="bg-surface-card border border-surface-border rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-text-primary mb-4">Edit Activity</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-xs text-text-muted mb-1">Last 30 Days</p>
+            <p className="text-2xl font-bold text-text-primary">{overview?.edits_last_30_days || 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Users with Edits</p>
+            <p className="text-2xl font-bold text-text-primary">{overview?.users_with_edits || 0}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Avg Edit %</p>
+            <p className="text-2xl font-bold text-text-primary">{overview?.avg_edit_percentage?.toFixed(1) || 0}%</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Cost per Analysis</p>
+            <p className="text-2xl font-bold text-text-primary">$0.30</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Cost Breakdown */}
+      <div className="bg-gradient-to-br from-warning/10 to-warning/5 border border-warning/30 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center">
+            <DollarSign className="w-5 h-5 text-warning" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-text-primary mb-2">Monthly Cost Estimate</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
+              <div>
+                <p className="text-xs text-text-muted">Writing Style Analysis</p>
+                <p className="text-lg font-bold text-text-primary">
+                  ${((performance?.analyses_last_30_days || 0) * 0.30).toFixed(2)}
+                </p>
+                <p className="text-xs text-text-secondary">{performance?.analyses_last_30_days || 0} × $0.30</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">Est. Edit Analysis</p>
+                <p className="text-lg font-bold text-text-primary">$0.50</p>
+                <p className="text-xs text-text-secondary">~10 × $0.05</p>
+              </div>
+              <div>
+                <p className="text-xs text-text-muted">Total Monthly</p>
+                <p className="text-lg font-bold text-warning">
+                  ${(performance?.estimated_monthly_cost_usd || 0 + 0.50).toFixed(2)}
+                </p>
+                <p className="text-xs text-text-secondary">Very cost-effective!</p>
+              </div>
+            </div>
+            <p className="text-xs text-text-secondary">
+              💡 Tip: Profile caching (30 days) minimizes re-analysis costs. Daily refresh handles stale profiles automatically.
+            </p>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

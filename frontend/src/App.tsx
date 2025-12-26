@@ -23,6 +23,13 @@ import { ComparePolymail } from './components/compare/ComparePolymail';
 import { CompareEmClient } from './components/compare/CompareEmClient';
 import { CompareMailspring } from './components/compare/CompareMailspring';
 import { CompareBlueMail } from './components/compare/CompareBlueMail';
+import { CompareEllie } from './components/compare/CompareEllie';
+import { CompareAddyAI } from './components/compare/CompareAddyAI';
+import { CompareComposeAI } from './components/compare/CompareComposeAI';
+import { CompareReadyToSend } from './components/compare/CompareReadyToSend';
+import { CompareLavender } from './components/compare/CompareLavender';
+import { CompareHey } from './components/compare/CompareHey';
+import { CompareCanaryMail } from './components/compare/CompareCanaryMail';
 import { LoginPage } from './components/auth/LoginPage';
 import { RegisterPage } from './components/auth/RegisterPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -37,6 +44,7 @@ import { PasswordSetupModal } from './components/PasswordSetupModal';
 import { BillingPage } from './components/billing/BillingPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { AdminPage } from './components/admin/AdminPage';
+import { AILearningPage } from './components/ai-learning/AILearningPage';
 import { FreeToolsPage } from './components/FreeToolsPage';
 import { FreeToolsThankYouPage } from './components/FreeToolsThankYouPage';
 import EmailPromptsPage from './pages/EmailPromptsPage';
@@ -281,6 +289,13 @@ function AppContent() {
         <Route path="/compare/em-client" element={<CompareEmClient />} />
         <Route path="/compare/mailspring" element={<CompareMailspring />} />
         <Route path="/compare/bluemail" element={<CompareBlueMail />} />
+        <Route path="/compare/ellie" element={<CompareEllie />} />
+        <Route path="/compare/addy-ai" element={<CompareAddyAI />} />
+        <Route path="/compare/compose-ai" element={<CompareComposeAI />} />
+        <Route path="/compare/ready-to-send" element={<CompareReadyToSend />} />
+        <Route path="/compare/lavender" element={<CompareLavender />} />
+        <Route path="/compare/hey" element={<CompareHey />} />
+        <Route path="/compare/canary-mail" element={<CompareCanaryMail />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
@@ -322,6 +337,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-learning"
+          element={
+            <ProtectedRoute>
+              <AILearningPage />
             </ProtectedRoute>
           }
         />
