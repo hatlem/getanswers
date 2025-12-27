@@ -21,7 +21,7 @@ pydantic[email]==2.10.3
 pydantic-settings==2.7.0
 
 # Email sending (for magic links)
-aiosmtplib==3.0.2
+aiosmtplib==5.0.0
 emails==0.6
 
 # Gmail API
