@@ -15,6 +15,7 @@ import {
   Target,
   ChevronDown,
   Loader2,
+  X,
 } from 'lucide-react';
 
 // Animated gradient orb background

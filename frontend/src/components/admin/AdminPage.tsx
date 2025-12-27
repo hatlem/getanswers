@@ -220,7 +220,7 @@ function OverviewTab({ stats, loading }: { stats?: PlatformStats; loading: boole
   );
 }
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: React.ElementType; color: string }) {
+function StatCard({ label, value, icon: Icon, color }: { label: string; value: number | string; icon: React.ElementType; color: string }) {
   return (
     <div className="bg-surface-card border border-surface-border rounded-xl p-4">
       <div className="flex items-center gap-3">

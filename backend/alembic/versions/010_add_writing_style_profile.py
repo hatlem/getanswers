@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic
 revision = '010_add_writing_style_profile'
-down_revision = '009_security_compliance_tables'
+down_revision = '009_security_compliance'
 branch_labels = None
 depends_on = None
 

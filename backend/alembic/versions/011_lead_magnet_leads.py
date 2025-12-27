@@ -1,7 +1,7 @@
 """add lead magnet leads table
 
-Revision ID: 007
-Revises: 006
+Revision ID: 011_lead_magnet_leads
+Revises: 010_add_writing_style_profile
 Create Date: 2024-12-21
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '007'
-down_revision = '006'
+revision = '011_lead_magnet_leads'
+down_revision = '010_add_writing_style_profile'
 branch_labels = None
 depends_on = None
 

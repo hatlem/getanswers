@@ -1,37 +1,43 @@
 # GetAnswers - Comprehensive User Journey Stories
 
-This document outlines 10 comprehensive user journey stories covering different user types, scenarios, and workflows within the GetAnswers AI Email Agent platform.
+This document outlines 12 comprehensive user journey stories covering different user types, scenarios, and workflows within the GetAnswers AI Email Agent platform.
 
 ---
 
 ## User Story 1: First-Time User Registration and Onboarding
 
-**Title:** New User Complete Onboarding with Gmail Integration
+**Title:** New User Complete Onboarding with Gmail or Outlook Integration
 
 **As a** busy professional drowning in email
 
-**I want to** create an account and connect my Gmail to GetAnswers
+**I want to** create an account and connect my Gmail or Outlook to GetAnswers
 
 **So that** I can start having AI handle my routine email responses automatically
 
 ### Acceptance Criteria
-- User can register using email/password or Google OAuth
+- User can register using email/password, Google OAuth, or Microsoft OAuth
 - User is guided through a clear 3-step onboarding process (Welcome, Connect Email, Preferences)
-- Gmail OAuth flow completes successfully with proper token storage
+- Gmail OAuth or Microsoft/Outlook OAuth flow completes successfully with proper token storage
 - Personal organization/workspace is automatically created for the user
 - AI learning analysis is triggered after onboarding completes (if user has 3+ sent emails)
 
 ### User Journey Steps
 1. **Landing Page Discovery**: User arrives at getanswers.co and reads about the AI email agent capabilities, including the promise of 80%+ emails handled autonomously
-2. **Registration Initiation**: User clicks "Get Started" and chooses to register via Google OAuth for faster signup
+2. **Registration Initiation**: User clicks "Get Started" and chooses to register via Google OAuth or Microsoft OAuth for faster signup
 3. **Account Creation**: System creates user account, generates personal organization workspace, and redirects to dashboard
 4. **Onboarding Modal - Welcome**: User sees welcome screen explaining the 3-step setup: Connect email, AI learns your style, Reclaim your time
-5. **Onboarding Modal - Connect Email**: User clicks "Connect with Google" button, is redirected to Google OAuth consent screen
-6. **Gmail Authorization**: User grants read/write access to Gmail, Google redirects back with authorization code
-7. **Token Exchange**: Backend exchanges auth code for access/refresh tokens, stores credentials securely in user profile, validates by fetching Gmail profile
+5. **Onboarding Modal - Connect Email**: User clicks "Connect with Google" or "Connect with Microsoft/Outlook" button, is redirected to the respective OAuth consent screen
+6. **Email Authorization**: User grants read/write access to Gmail or Outlook, provider redirects back with authorization code
+7. **Token Exchange**: Backend exchanges auth code for access/refresh tokens, stores credentials securely in user profile, validates by fetching email profile
 8. **Onboarding Modal - Preferences**: User configures initial preferences: auto-reply to routine emails, daily digest summary, priority inbox sorting
 9. **Complete Onboarding**: User clicks "Get Started", onboarding is marked complete, Celery task queued to analyze writing style from sent emails
 10. **Dashboard Ready**: User sees main dashboard with empty review queue, ready for email sync to begin
+
+### Microsoft/Outlook OAuth Details
+- Microsoft OAuth uses tenant-based authentication (default: "common" for multi-tenant apps)
+- Scopes requested: Mail.Read, Mail.ReadWrite, Mail.Send, User.Read, offline_access
+- Tokens include refresh token for automatic renewal
+- Profile fetched via Microsoft Graph API (/me endpoint)
 
 ---
 
@@ -325,19 +331,143 @@ This document outlines 10 comprehensive user journey stories covering different 
 
 ---
 
+## User Story 11: Multi-Factor Authentication Setup
+
+**Title:** Enabling TOTP-Based MFA for Enhanced Account Security
+
+**As a** security-conscious user
+
+**I want to** enable multi-factor authentication on my account
+
+**So that** my account is protected even if my password is compromised
+
+### Acceptance Criteria
+- User can initiate MFA setup via /api/v1/mfa/setup endpoint
+- System generates TOTP secret and QR code URI for authenticator apps
+- 8 backup codes are generated and displayed once for emergency access
+- User must verify first TOTP code to confirm setup before MFA is enabled
+- MFA is required for all subsequent logins after enabling
+- User can disable MFA with verification code
+- User can regenerate backup codes if running low
+
+### User Journey Steps
+1. **Access Security Settings**: User navigates to account security settings page
+2. **Initiate MFA Setup**: User clicks "Enable Two-Factor Authentication" button
+3. **Setup Request**: Frontend calls POST /api/v1/mfa/setup, backend generates TOTP secret (160-bit, base32-encoded)
+4. **QR Code Display**: System returns QR code URI in otpauth:// format compatible with Google Authenticator, Authy, etc.
+5. **Backup Codes Display**: User sees 8 backup codes (8-character alphanumeric) - reminded to save these securely
+6. **Authenticator Scan**: User scans QR code with authenticator app, sees "GetAnswers:[email]" entry
+7. **Verification Code Entry**: User enters 6-digit TOTP code from authenticator to confirm setup
+8. **Confirmation Request**: Backend calls confirm_mfa_setup() - verifies code against secret with ±1 time window tolerance
+9. **MFA Enabled**: On successful verification, totp_enabled=True, totp_verified_at timestamp set
+10. **Audit Logging**: MFA_ENABLED event logged with user details for security audit trail
+
+### Technical Details
+- TOTP Configuration: 6 digits, 30-second interval, SHA1 algorithm
+- Time window tolerance: ±1 interval (allows for clock skew)
+- Backup codes: 8 codes, SHA256 hashed for storage, marked as used after single use
+- Failed attempt tracking: Locks account after excessive failures
+- Secret encryption: TOTP secrets encrypted at rest using app encryption key
+
+### Edge Cases
+- **Clock Skew**: TOTP allows ±30 seconds variance to handle slight time differences
+- **Backup Code Usage**: Using backup code logs WARNING-level audit entry, shows remaining code count
+- **Account Lockout**: After multiple failed MFA attempts, account temporarily locked (MFA_LOCKED event)
+- **Lost Authenticator**: User can use backup codes, then regenerate new backup codes once logged in
+
+---
+
+## User Story 12: Session Management
+
+**Title:** Viewing and Managing Active Sessions Across Devices
+
+**As a** user accessing GetAnswers from multiple devices
+
+**I want to** view and manage my active sessions
+
+**So that** I can ensure my account is not being accessed from unauthorized devices
+
+### Acceptance Criteria
+- User can view all active sessions with device info, location, and last activity time
+- Maximum 2 concurrent sessions allowed per user (oldest auto-revoked when limit exceeded)
+- User can remotely revoke any session except the current one
+- User can revoke all other sessions at once ("logout everywhere")
+- New device logins are flagged and can trigger notifications
+- Impossible travel detection warns of suspicious login patterns
+- Sessions expire after 7 days of inactivity
+
+### User Journey Steps
+1. **Access Sessions Page**: User navigates to Security > Active Sessions in settings
+2. **View Active Sessions**: Page displays list of active sessions with details for each:
+   - Device type (desktop/mobile/tablet), browser, OS
+   - IP address, city, country
+   - Last activity timestamp
+   - "New device" or "New location" badges if applicable
+   - Current session indicator
+3. **Identify Unknown Session**: User notices unfamiliar session from different country
+4. **Revoke Session**: User clicks "Revoke" on suspicious session
+5. **Confirmation**: Session revoked, removed from list, SESSION_REVOKED audit event logged
+6. **Logout Everywhere Option**: User clicks "Revoke All Other Sessions" for extra security
+7. **Bulk Revocation**: All sessions except current are invalidated with reason "logout_all"
+8. **Password Change Recommended**: System suggests changing password if suspicious activity detected
+
+### Session Details Tracked
+- **Device Fingerprint**: SHA256 hash of user agent for device identification
+- **Browser/OS**: Parsed from user agent (e.g., "Chrome 120", "macOS 14.0")
+- **Location**: IP-based geolocation (city, country, country code)
+- **Trust Score**: Based on device history and trust level (TRUSTED/UNKNOWN/SUSPICIOUS)
+- **Session Duration**: Created timestamp and last activity update
+
+### Security Features
+- **Concurrent Session Limit**: Max 2 sessions - when creating 3rd, oldest session auto-revoked with "concurrent_session_limit" reason
+- **New Device Detection**: Device not seen in 30+ days flagged as new, logged as NEW_DEVICE_DETECTED
+- **New Location Detection**: First login from a country triggers is_new_location flag
+- **Impossible Travel**: Login from different country within 1 hour triggers IMPOSSIBLE_TRAVEL warning
+- **Session Expiry**: Sessions expire after 168 hours (7 days), enforced on validation
+
+### Audit Events
+- SESSION_CREATED: New session initiated with device details
+- SESSION_REVOKED: Session terminated (manual, concurrent limit, or logout)
+- NEW_DEVICE_DETECTED: First-time device used for login
+- CONCURRENT_SESSION_LIMIT: Session auto-revoked due to limit
+- IMPOSSIBLE_TRAVEL: Suspicious geographic login pattern detected
+
+---
+
+## Implementation Notes
+
+### Quick Signup with Auto-Generated Password
+
+The platform supports a streamlined signup flow where passwords can be auto-generated:
+
+- **Registration**: POST /api/auth/register accepts `auto_generated_password: true` flag
+- **User Model**: `needs_password_setup` field tracks users who need to set their own password
+- **Password Setup**: POST /api/auth/set-password endpoint allows users to set password later
+- **Use Case**: Useful for admin-invited users or quick onboarding flows where password selection is deferred
+
+This flow enables:
+1. Admin creates user account with auto-generated password
+2. User receives invitation/magic link to access account
+3. User prompted to set their own password on first login
+4. `needs_password_setup` flag cleared after password is set
+
+---
+
 ## Summary
 
-These 10 user stories cover the complete user journey through GetAnswers:
+These 12 user stories cover the complete user journey through GetAnswers:
 
-1. **Registration & Onboarding** - New user setup with Gmail OAuth
+1. **Registration & Onboarding** - New user setup with Gmail or Microsoft/Outlook OAuth
 2. **Approve Actions** - Standard review queue workflow
 3. **Edit Before Sending** - Modifying AI drafts
 4. **Override/Reject** - Handling manually for complex cases
 5. **Escalate for Team** - Collaborative review process
 6. **SMTP/IMAP Setup** - Non-OAuth email providers
 7. **AI Learning Profile** - Understanding and managing personalization
-8. **Magic Link Auth** - Passwordless login flow
+8. **Magic Link Auth** - Passwordless login flow (15-minute expiry, rate limited to 3/hour)
 9. **Admin Monitoring** - Platform-wide AI learning oversight
 10. **Auto-Execution** - Autonomous handling of routine emails
+11. **Multi-Factor Authentication** - TOTP-based MFA with backup codes
+12. **Session Management** - View and revoke active sessions across devices
 
 Each story represents real functionality implemented in the codebase, covering happy paths, edge cases, and error handling scenarios that users may encounter.
