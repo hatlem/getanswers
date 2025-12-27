@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Header, Depends
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db import get_db
+from app.core.database import get_db
 from app.models.user import User
 from app.models.organization import Organization, OrganizationMember
 from app.core.security import hash_password
