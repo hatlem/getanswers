@@ -1297,3 +1297,31 @@ Output:
 ---
 
 *Powered by GetAnswers - AI that actually answers.*
+---
+
+## Pro Upgrade: Prompt Ops Playbook
+Make prompt output consistent and useful for email automation and inbox productivity.
+
+### Prompting Rules
+- Provide context: goal, audience, and constraints.
+- Ask for structured output.
+- Include examples of good vs. bad output.
+
+### Quality Rubric
+| Dimension | 1 | 3 | 5 |
+| --- | --- | --- | --- |
+| Accuracy | Generic | Mostly right | Verified and precise |
+| Actionability | Vague | Some steps | Clear next actions |
+| Brand Fit | Off tone | Acceptable | On-brand and sharp |
+
+### Review Loop
+- Run 3 sample prompts weekly.
+- Log gaps and refine prompt wording.
+- Save best outputs to a shared library.
+
+### Stakeholders to Involve
+- ops.
+- support.
+- sales.
+- founders.
+
