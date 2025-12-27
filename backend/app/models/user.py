@@ -39,6 +39,7 @@ class User(Base):
 
     # OAuth provider IDs
     google_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    microsoft_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
 
     # Profile
     name: Mapped[str] = mapped_column(String(255), nullable=False)

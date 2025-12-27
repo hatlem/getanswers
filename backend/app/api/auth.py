@@ -985,3 +985,243 @@ async def google_callback(
         ),
         access_token=access_token
     )
+
+
+# =============================================================================
+# Microsoft OAuth Login
+# =============================================================================
+
+MICROSOFT_AUTH_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
+MICROSOFT_TOKEN_URL = "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+MICROSOFT_USERINFO_URL = "https://graph.microsoft.com/v1.0/me"
+
+# Store Microsoft OAuth state tokens temporarily
+_microsoft_oauth_states: dict[str, datetime] = {}
+
+
+def cleanup_expired_microsoft_states():
+    """Remove expired Microsoft OAuth state tokens."""
+    now = datetime.utcnow()
+    expired = [k for k, v in _microsoft_oauth_states.items() if (now - v).total_seconds() > 600]
+    for k in expired:
+        del _microsoft_oauth_states[k]
+
+
+class MicrosoftAuthUrlResponse(BaseModel):
+    url: str
+
+
+@router.get("/microsoft", response_model=MicrosoftAuthUrlResponse)
+async def get_microsoft_auth_url(
+    redirect_uri: Optional[str] = Query(None, description="Custom redirect URI")
+):
+    """
+    Get the Microsoft OAuth authorization URL.
+
+    The frontend should redirect the user to this URL to start the OAuth flow.
+    """
+    if not settings.MICROSOFT_CLIENT_ID:
+        raise ValidationError("Microsoft OAuth is not configured")
+
+    # Clean up expired states
+    cleanup_expired_microsoft_states()
+
+    # Generate state token for CSRF protection
+    state = secrets.token_urlsafe(32)
+    _microsoft_oauth_states[state] = datetime.utcnow()
+
+    # Build redirect URI - use custom if provided, otherwise default
+    callback_uri = redirect_uri or f"{settings.APP_URL}/api/auth/callback/microsoft"
+
+    # Use tenant from settings or default to 'common' for multi-tenant
+    tenant = settings.MICROSOFT_TENANT_ID or "common"
+
+    # Build authorization URL
+    params = {
+        "client_id": settings.MICROSOFT_CLIENT_ID,
+        "redirect_uri": callback_uri,
+        "response_type": "code",
+        "scope": "openid email profile User.Read",
+        "state": state,
+        "response_mode": "query",
+    }
+
+    query_string = "&".join(f"{k}={v}" for k, v in params.items())
+    auth_url = MICROSOFT_AUTH_URL.format(tenant=tenant) + "?" + query_string
+
+    return MicrosoftAuthUrlResponse(url=auth_url)
+
+
+class MicrosoftCallbackRequest(BaseModel):
+    code: str = Field(..., description="Authorization code from Microsoft")
+    state: str = Field(..., description="State token for CSRF verification")
+    redirect_uri: Optional[str] = Field(None, description="Redirect URI used in authorization")
+
+
+@router.post("/microsoft/callback", response_model=AuthResponse)
+async def microsoft_callback(
+    req: Request,
+    request: MicrosoftCallbackRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Handle Microsoft OAuth callback.
+
+    Exchange the authorization code for tokens and create/login the user.
+    """
+    client_ip = get_client_ip(req)
+
+    if not settings.MICROSOFT_CLIENT_ID or not settings.MICROSOFT_CLIENT_SECRET:
+        raise ValidationError("Microsoft OAuth is not configured")
+
+    # Verify state token
+    if request.state not in _microsoft_oauth_states:
+        logger.warning(f"Invalid Microsoft OAuth state token from {client_ip}")
+        raise ValidationError("Invalid or expired state token")
+
+    # Check if state is expired (10 minute window)
+    state_created = _microsoft_oauth_states.pop(request.state)
+    if (datetime.utcnow() - state_created).total_seconds() > 600:
+        logger.warning(f"Expired Microsoft OAuth state token from {client_ip}")
+        raise ValidationError("State token has expired")
+
+    # Build redirect URI
+    callback_uri = request.redirect_uri or f"{settings.APP_URL}/api/auth/callback/microsoft"
+
+    # Use tenant from settings or default to 'common' for multi-tenant
+    tenant = settings.MICROSOFT_TENANT_ID or "common"
+
+    # Exchange code for tokens
+    async with httpx.AsyncClient() as client:
+        try:
+            token_response = await client.post(
+                MICROSOFT_TOKEN_URL.format(tenant=tenant),
+                data={
+                    "client_id": settings.MICROSOFT_CLIENT_ID,
+                    "client_secret": settings.MICROSOFT_CLIENT_SECRET,
+                    "code": request.code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": callback_uri,
+                    "scope": "openid email profile User.Read",
+                }
+            )
+
+            if token_response.status_code != 200:
+                logger.error(f"Microsoft token exchange failed: {token_response.text}")
+                raise AuthenticationError("Failed to authenticate with Microsoft")
+
+            token_data = token_response.json()
+            access_token_ms = token_data.get("access_token")
+
+            if not access_token_ms:
+                raise AuthenticationError("No access token received from Microsoft")
+
+            # Get user info from Microsoft Graph
+            userinfo_response = await client.get(
+                MICROSOFT_USERINFO_URL,
+                headers={"Authorization": f"Bearer {access_token_ms}"}
+            )
+
+            if userinfo_response.status_code != 200:
+                logger.error(f"Failed to get Microsoft user info: {userinfo_response.text}")
+                raise AuthenticationError("Failed to get user information from Microsoft")
+
+            userinfo = userinfo_response.json()
+
+        except httpx.RequestError as e:
+            logger.error(f"HTTP error during Microsoft OAuth: {e}")
+            raise AuthenticationError("Failed to communicate with Microsoft")
+
+    # Extract user info
+    microsoft_email = userinfo.get("mail") or userinfo.get("userPrincipalName")
+    microsoft_name = userinfo.get("displayName") or userinfo.get("givenName") or (microsoft_email.split("@")[0] if microsoft_email else "User")
+    microsoft_id = userinfo.get("id")
+
+    if not microsoft_email:
+        raise AuthenticationError("No email received from Microsoft")
+
+    email = sanitize_email(microsoft_email)
+
+    # Find or create user
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    is_new_user = False
+    if not user:
+        # Create new user
+        user = User(
+            email=email,
+            name=microsoft_name,
+            password_hash=None,  # No password for OAuth users
+            microsoft_id=microsoft_id,
+        )
+        db.add(user)
+        await db.flush()
+
+        # Create personal organization
+        await create_personal_organization(db, user)
+
+        await db.commit()
+        await db.refresh(user)
+        is_new_user = True
+        logger.info(f"Created user {email} via Microsoft OAuth with personal organization")
+
+        # Log registration
+        await AuditLog.log_registration(
+            email=email,
+            ip_address=client_ip,
+            success=True,
+            user_id=str(user.id),
+        )
+
+        # Send welcome email (non-blocking)
+        try:
+            await email_service.send_welcome_email(user.email, user.name)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
+    else:
+        # Update microsoft_id if not set
+        if not user.microsoft_id and microsoft_id:
+            user.microsoft_id = microsoft_id
+            await db.commit()
+
+    # Create access token
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    # Log successful login
+    await AuditLog.log_login_attempt(
+        email=email,
+        success=True,
+        ip_address=client_ip,
+        user_id=str(user.id),
+    )
+
+    # Build response
+    current_org = None
+    if user.current_organization_id:
+        org_result = await db.execute(
+            select(Organization).where(Organization.id == user.current_organization_id)
+        )
+        org = org_result.scalar_one_or_none()
+        if org:
+            current_org = OrganizationInfo(
+                id=org.id,
+                name=org.name,
+                slug=org.slug,
+                is_personal=org.is_personal
+            )
+
+    logger.info(f"User {user.email} {'registered' if is_new_user else 'logged in'} via Microsoft OAuth")
+    return AuthResponse(
+        user=UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            is_super_admin=user.is_super_admin,
+            current_organization=current_org,
+            onboarding_completed=user.onboarding_completed,
+            needs_password_setup=False,  # OAuth users don't need password
+            created_at=user.created_at
+        ),
+        access_token=access_token
+    )

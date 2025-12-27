@@ -17,6 +17,7 @@ export function LoginPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
@@ -28,6 +29,19 @@ export function LoginPage() {
     } catch (err) {
       console.error('Failed to get Google auth URL:', err);
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleMicrosoftSignIn = async () => {
+    setIsMicrosoftLoading(true);
+    clearError();
+    try {
+      const response = await apiClient.get<{ url: string }>('/api/auth/microsoft');
+      // Redirect to Microsoft OAuth
+      window.location.href = response.url;
+    } catch (err) {
+      console.error('Failed to get Microsoft auth URL:', err);
+      setIsMicrosoftLoading(false);
     }
   };
 
@@ -209,7 +223,7 @@ export function LoginPage() {
             variant="outline"
             className="w-full flex items-center justify-center gap-3"
             onClick={handleGoogleSignIn}
-            disabled={isLoading || isGoogleLoading}
+            disabled={isLoading || isGoogleLoading || isMicrosoftLoading}
           >
             {isGoogleLoading ? (
               <div className="w-5 h-5 border-2 border-text-muted border-t-transparent rounded-full animate-spin" />
@@ -236,6 +250,27 @@ export function LoginPage() {
             Continue with Google
           </Button>
 
+          {/* Microsoft Sign In */}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center justify-center gap-3 mt-3"
+            onClick={handleMicrosoftSignIn}
+            disabled={isLoading || isGoogleLoading || isMicrosoftLoading}
+          >
+            {isMicrosoftLoading ? (
+              <div className="w-5 h-5 border-2 border-text-muted border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 23 23">
+                <path fill="#f25022" d="M0 0h11v11H0z"/>
+                <path fill="#00a4ef" d="M0 12h11v11H0z"/>
+                <path fill="#7fba00" d="M12 0h11v11H12z"/>
+                <path fill="#ffb900" d="M12 12h11v11H12z"/>
+              </svg>
+            )}
+            Continue with Microsoft
+          </Button>
+
           {/* Toggle Magic Link */}
           <Button
             type="button"
@@ -246,7 +281,7 @@ export function LoginPage() {
               setValidationErrors({});
               clearError();
             }}
-            disabled={isLoading || isGoogleLoading}
+            disabled={isLoading || isGoogleLoading || isMicrosoftLoading}
           >
             {showMagicLink ? (
               <>
