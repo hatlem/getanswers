@@ -9,7 +9,7 @@ asyncpg==0.30.0
 alembic==1.14.0
 
 # Redis
-redis==5.2.1
+redis==7.1.0
 
 # Celery (task queue)
 celery[redis]==5.3.6
